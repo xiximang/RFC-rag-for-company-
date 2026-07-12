@@ -1,0 +1,227 @@
+name: rag-lightweight
+
+# -----------------------------------------------------------------------------
+# Lightweight deployment: PostgreSQL + pgvector, Redis, single backend + worker.
+#
+# No Milvus, no MinIO, no RabbitMQ, no Kong, no monitoring.
+# The frontend nginx proxies /api directly to the backend container.
+# -----------------------------------------------------------------------------
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: rag-lw-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rag_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag_password}
+      POSTGRES_DB: ${POSTGRES_DB:-rag_kb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - rag-lw-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1g
+        reservations:
+          memory: 128m
+
+  redis:
+    image: redis:7-alpine
+    container_name: rag-lw-redis
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - rag-lw-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256m
+        reservations:
+          memory: 64m
+
+  app-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-your-dockerhub-username/rag-backend}:${IMAGE_TAG:-latest}
+    container_name: rag-lw-app-backend
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://rag_user:rag_password@postgres:5432/rag_kb}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      RABBITMQ_URL: ${RABBITMQ_URL:-redis://redis:6379/0}
+      # Lightweight backend selection
+      VECTOR_STORE_BACKEND: pgvector
+      FILE_STORAGE_BACKEND: local
+      LOCAL_STORAGE_PATH: /data/rag-documents
+      CELERY_BROKER_TYPE: redis
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      # Model service endpoints (configure in .env for real providers)
+      EMBEDDING_SERVICE_URL: ${EMBEDDING_SERVICE_URL:-http://embedding-service:8080}
+      EMBEDDING_API_URL: ${EMBEDDING_API_URL:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-large}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-768}
+      RERANK_SERVICE_URL: ${RERANK_SERVICE_URL:-http://rerank-service:8002/rerank}
+      RERANK_API_URL: ${RERANK_API_URL:-}
+      RERANK_MODEL: ${RERANK_MODEL:-}
+      RERANK_API_KEY: ${RERANK_API_KEY:-}
+      LLM_API_URL: ${LLM_API_URL:-}
+      LLM_MODEL: ${LLM_MODEL:-minimax-m3}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      MINIMAX_API_KEY: ${MINIMAX_API_KEY:-}
+      MINIMAX_BASE_URL: ${MINIMAX_BASE_URL:-https://api.minimax.chat}
+      # JWT (set a real secret in production)
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
+      SECRET_KEY: ${SECRET_KEY:-}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      ADMIN_USERNAMES: ${ADMIN_USERNAMES:-admin}
+    volumes:
+      - ./backend/.env:/app/.env:ro
+      - ./backend/app:/app/app    # 挂载整个 app 目录，代码改动自动同步
+      - ./samples:/app/samples    # 挂载 samples 目录
+      - ./samples_2:/app/samples_2  # 挂载 samples_2 目录
+      - local_storage:/data/rag-documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rag-lw-network
+    # Lightweight local mode: run as root so the local storage volume is writable.
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Running Alembic migrations..."
+        alembic upgrade head
+        echo "Starting backend..."
+        uvicorn app.main:app --host 0.0.0.0 --port 8080 --workers 2
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1.5g
+        reservations:
+          memory: 256m
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.ingest
+    container_name: rag-lw-worker
+    environment:
+      WORKER_QUEUE: ingest,embed,permission_sync
+      DATABASE_URL: ${DATABASE_URL:-postgresql://rag_user:rag_password@postgres:5432/rag_kb}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      RABBITMQ_URL: ${RABBITMQ_URL:-redis://redis:6379/0}
+      # Lightweight backend selection
+      VECTOR_STORE_BACKEND: pgvector
+      FILE_STORAGE_BACKEND: local
+      LOCAL_STORAGE_PATH: /data/rag-documents
+      CELERY_BROKER_TYPE: redis
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      # Model service endpoints
+      EMBEDDING_SERVICE_URL: ${EMBEDDING_SERVICE_URL:-http://embedding-service:8080}
+      EMBEDDING_API_URL: ${EMBEDDING_API_URL:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-large}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-768}
+      RERANK_SERVICE_URL: ${RERANK_SERVICE_URL:-http://rerank-service:8002/rerank}
+      RERANK_API_URL: ${RERANK_API_URL:-}
+      RERANK_MODEL: ${RERANK_MODEL:-}
+      RERANK_API_KEY: ${RERANK_API_KEY:-}
+      LLM_API_URL: ${LLM_API_URL:-}
+      LLM_MODEL: ${LLM_MODEL:-minimax-m3}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      MINIMAX_API_KEY: ${MINIMAX_API_KEY:-}
+      MINIMAX_BASE_URL: ${MINIMAX_BASE_URL:-https://api.minimax.chat}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
+      SECRET_KEY: ${SECRET_KEY:-}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      ADMIN_USERNAMES: ${ADMIN_USERNAMES:-admin}
+    volumes:
+      - ./backend/.env:/app/.env:ro
+      - ./backend/app:/app/app    # 挂载代码目录，支持热更新
+      - ./samples_2:/app/samples_2  # 挂载测试样本目录
+      - local_storage:/data/rag-documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rag-lw-network
+    command: celery -A app.workers.celery_app worker -Q ingest,embed,permission_sync -n lw_worker@%h --loglevel=info
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 4g    # 2026-07-03: 从 2g 增加到 4g，解决大文档处理时内存溢出问题
+        reservations:
+          memory: 256m
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ${FRONTEND_IMAGE:-your-dockerhub-username/rag-frontend}:${IMAGE_TAG:-latest}
+    container_name: rag-lw-frontend
+    ports:
+      - "3002:80"
+    depends_on:
+      app-backend:
+        condition: service_healthy
+    networks:
+      - rag-lw-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128m
+        reservations:
+          memory: 32m
+
+volumes:
+  postgres_data:
+  redis_data:
+  local_storage:
+
+networks:
+  rag-lw-network:
+    driver: bridge

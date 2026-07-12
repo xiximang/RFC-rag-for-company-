@@ -1,0 +1,285 @@
+================================================================================
+实验描述：
+1. 修复清洗逻辑：删除 `_remove_repeating_footers`，解决 Excel 中
+   "螺栓并联"等重复内容被误删的问题，重新处理 14 号 Excel 文件。
+2. 测试集从文件级改为 chunk 级（`filename_chunkN`）。
+3. Q3 expected 增加 169/183（边界偏移补偿）
+4. Q4 expected 增加 639（639 文本更完整）
+5. Q9 查询改为"支脚机柜2400*850（四柜）的底座是如何并联的"
+================================================================================
+
+================================================================================
+UPS Document Retrieval Quality Evaluation
+API: http://localhost:8080
+KB : ups-eval-kb
+================================================================================
+[OK] Logged in as admin
+[OK] Reusing KB c93132f7-3664-4b0d-9d35-4fb88a0e7375
+
+[INFO] KB c93132f7-3664-4b0d-9d35-4fb88a0e7375 has 20/20 indexed documents
+
+[INFO] Running evaluation queries...
+
+================================================================================
+PER-QUERY RESULTS
+================================================================================
+
+Query: SOH显示电池异常，电池放电电压较低。
+Expected files: ['02_iBatt']
+  [hybrid  ] total=5
+    top chunks : ['02_iBattery 3.0 用户手册.pdf_chunk61', '18_UPS5000 告警参考.pdf_chunk613']
+    recall@k    : @1=0.50, @3=0.50, @5=0.50, @10=0.50
+    precision@k : @1=1.00, @3=0.33, @5=0.20, @10=0.10
+    ndcg@k      : @1=1.00, @3=1.00, @5=1.00, @10=1.00
+    mrr         : 1.00
+  [semantic] total=5
+    top chunks : ['02_iBattery 3.0 用户手册.pdf_chunk61', '18_UPS5000 告警参考.pdf_chunk613']
+    recall@k    : @1=0.50, @3=0.50, @5=0.50, @10=0.50
+    precision@k : @1=1.00, @3=0.33, @5=0.20, @10=0.10
+    ndcg@k      : @1=1.00, @3=1.00, @5=1.00, @10=1.00
+    mrr         : 1.00
+  [keyword ] total=3
+    top chunks : ['02_iBattery 3.0 用户手册.pdf_chunk61']
+    recall@k    : @1=0.50, @3=0.50, @5=0.50, @10=0.50
+    precision@k : @1=1.00, @3=0.33, @5=0.20, @10=0.10
+    ndcg@k      : @1=1.00, @3=1.00, @5=1.00, @10=1.00
+    mrr         : 1.00
+
+Query: iBOX的RF_Z指示灯不亮了
+Expected files: ['01_iBatt', '02_iBatt', '02_iBatt']
+  [hybrid  ] total=5
+    top chunks : ['02_iBattery 3.0 用户手册.pdf_chunk52', '01_iBattery 3.0 快速指南.pdf_chunk12']
+    recall@k    : @1=0.00, @3=0.20, @5=0.60, @10=0.60
+    precision@k : @1=0.00, @3=0.33, @5=0.60, @10=0.30
+    ndcg@k      : @1=0.00, @3=0.30, @5=0.68, @10=0.68
+    mrr         : 0.50
+  [semantic] total=5
+    top chunks : ['02_iBattery 3.0 用户手册.pdf_chunk52', '01_iBattery 3.0 快速指南.pdf_chunk12']
+    recall@k    : @1=0.00, @3=0.20, @5=0.60, @10=0.60
+    precision@k : @1=0.00, @3=0.33, @5=0.60, @10=0.30
+    ndcg@k      : @1=0.00, @3=0.30, @5=0.68, @10=0.68
+    mrr         : 0.50
+  [keyword ] total=0
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+
+Query: 下发电池电压低关机的命令是什么
+Expected files: ['03_UPS50', '03_UPS50', '05_UPS50', '05_UPS50']
+  [hybrid  ] total=5
+    top chunks : ['05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk183', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk169']
+    recall@k    : @1=0.17, @3=0.50, @5=0.67, @10=0.67
+    precision@k : @1=1.00, @3=1.00, @5=0.80, @10=0.40
+    ndcg@k      : @1=1.00, @3=1.00, @5=0.98, @10=0.98
+    mrr         : 1.00
+  [semantic] total=5
+    top chunks : ['05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk183', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk169']
+    recall@k    : @1=0.17, @3=0.50, @5=0.67, @10=0.67
+    precision@k : @1=1.00, @3=1.00, @5=0.80, @10=0.40
+    ndcg@k      : @1=1.00, @3=1.00, @5=0.98, @10=0.98
+    mrr         : 1.00
+  [keyword ] total=4
+    top chunks : ['05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk183', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk169']
+    recall@k    : @1=0.17, @3=0.50, @5=0.67, @10=0.67
+    precision@k : @1=1.00, @3=1.00, @5=0.80, @10=0.40
+    ndcg@k      : @1=1.00, @3=1.00, @5=1.00, @10=1.00
+    mrr         : 1.00
+
+Query: 开关状态线不正常，系统输出开关断开。
+Expected files: ['18_UPS50', '18_UPS50']
+  [hybrid  ] total=5
+    top chunks : ['18_UPS5000 告警参考.pdf_chunk639']
+    recall@k    : @1=0.33, @3=0.67, @5=0.67, @10=0.67
+    precision@k : @1=1.00, @3=0.67, @5=0.40, @10=0.20
+    ndcg@k      : @1=1.00, @3=1.00, @5=1.00, @10=1.00
+    mrr         : 1.00
+  [semantic] total=5
+    top chunks : ['18_UPS5000 告警参考.pdf_chunk639']
+    recall@k    : @1=0.33, @3=0.67, @5=0.67, @10=0.67
+    precision@k : @1=1.00, @3=0.67, @5=0.40, @10=0.20
+    ndcg@k      : @1=1.00, @3=1.00, @5=1.00, @10=1.00
+    mrr         : 1.00
+  [keyword ] total=2
+    top chunks : ['07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk152', '11_UPS5000-E 维护指南.pdf_chunk84']
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+
+Query: UPS5000E工作模式_维修旁路是什么
+Expected files: ['09_UPS50']
+  [hybrid  ] total=5
+    top chunks : ['16_UPS5000 产品介绍 培训资料 (50K特性, 40K&50K切换场景).ppt_chunk1', '09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1', '11_UPS5000-E 维护指南.pdf_chunk83', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk52']
+    recall@k    : @1=0.00, @3=0.50, @5=0.50, @10=0.50
+    precision@k : @1=0.00, @3=0.33, @5=0.20, @10=0.10
+    ndcg@k      : @1=0.00, @3=0.63, @5=0.63, @10=0.63
+    mrr         : 0.50
+  [semantic] total=5
+    top chunks : ['16_UPS5000 产品介绍 培训资料 (50K特性, 40K&50K切换场景).ppt_chunk1', '09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1', '11_UPS5000-E 维护指南.pdf_chunk83', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk52']
+    recall@k    : @1=0.00, @3=0.50, @5=0.50, @10=0.50
+    precision@k : @1=0.00, @3=0.33, @5=0.20, @10=0.10
+    ndcg@k      : @1=0.00, @3=0.63, @5=0.63, @10=0.63
+    mrr         : 0.50
+  [keyword ] total=2
+    top chunks : ['16_UPS5000 产品介绍 培训资料 (50K特性, 40K&50K切换场景).ppt_chunk1', '09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1']
+    recall@k    : @1=0.00, @3=0.50, @5=0.50, @10=0.50
+    precision@k : @1=0.00, @3=0.33, @5=0.20, @10=0.10
+    ndcg@k      : @1=0.00, @3=0.63, @5=0.63, @10=0.63
+    mrr         : 0.50
+
+Query: 怎么连接出风边柜电源线
+Expected files: ['15_UPS50', '15_UPS50']
+  [hybrid  ] total=5
+    top chunks : ['15_UPS5000 上出风边柜 用户手册.pdf_chunk14']
+    recall@k    : @1=0.33, @3=0.67, @5=0.67, @10=0.67
+    precision@k : @1=1.00, @3=0.67, @5=0.40, @10=0.20
+    ndcg@k      : @1=1.00, @3=1.00, @5=1.00, @10=1.00
+    mrr         : 1.00
+  [semantic] total=5
+    top chunks : ['15_UPS5000 上出风边柜 用户手册.pdf_chunk14']
+    recall@k    : @1=0.33, @3=0.67, @5=0.67, @10=0.67
+    precision@k : @1=1.00, @3=0.67, @5=0.40, @10=0.20
+    ndcg@k      : @1=1.00, @3=1.00, @5=1.00, @10=1.00
+    mrr         : 1.00
+  [keyword ] total=5
+    top chunks : ['15_UPS5000 上出风边柜 用户手册.pdf_chunk14', '07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk97']
+    recall@k    : @1=0.33, @3=0.67, @5=0.67, @10=0.67
+    precision@k : @1=1.00, @3=0.67, @5=0.40, @10=0.20
+    ndcg@k      : @1=1.00, @3=1.00, @5=1.00, @10=1.00
+    mrr         : 1.00
+
+Query: MDU显示屏接口有哪些
+Expected files: ['07_UPS50']
+  [hybrid  ] total=5
+    top chunks : ['05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk69', '07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk82', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk65', '10_UPS5000-E 监控模块 用户手册.pdf_chunk42']
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+  [semantic] total=5
+    top chunks : ['05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk69', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk65', '10_UPS5000-E 监控模块 用户手册.pdf_chunk42']
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+  [keyword ] total=3
+    top chunks : ['05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk69', '07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk82', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk64']
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+
+Query: 母线电压未升起，UPS整流器无法工作
+Expected files: ['07_UPS50', '11_UPS50', '18_UPS50']
+  [hybrid  ] total=5
+    top chunks : ['03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk138', '05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk164', '18_UPS5000 告警参考.pdf_chunk298', '11_UPS5000-E 维护指南.pdf_chunk65']
+    recall@k    : @1=0.00, @3=0.00, @5=0.17, @10=0.17
+    precision@k : @1=0.00, @3=0.00, @5=0.20, @10=0.10
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.39, @10=0.39
+    mrr         : 0.20
+  [semantic] total=5
+    top chunks : ['03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk138', '05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk164', '18_UPS5000 告警参考.pdf_chunk298', '11_UPS5000-E 维护指南.pdf_chunk65']
+    recall@k    : @1=0.00, @3=0.00, @5=0.17, @10=0.17
+    precision@k : @1=0.00, @3=0.00, @5=0.20, @10=0.10
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.39, @10=0.39
+    mrr         : 0.20
+  [keyword ] total=0
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+
+Query: 支脚机柜2400*850（四柜）的底座是如何并联的
+Expected files: ['14_UPS50', '14_UPS50']
+  [hybrid  ] total=5
+    top chunks : ['14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk12']
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+  [semantic] total=5
+    top chunks : ['14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk12']
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+  [keyword ] total=0
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+
+Query: 逆变器异常
+Expected files: ['07_UPS50', '11_UPS50', '18_UPS50']
+  [hybrid  ] total=5
+    top chunks : ['18_UPS5000 告警参考.pdf_chunk356']
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+  [semantic] total=5
+    top chunks : ['18_UPS5000 告警参考.pdf_chunk356']
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+  [keyword ] total=5
+    top chunks : ['18_UPS5000 告警参考.pdf_chunk356']
+    recall@k    : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    precision@k : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    ndcg@k      : @1=0.00, @3=0.00, @5=0.00, @10=0.00
+    mrr         : 0.00
+
+================================================================================
+AGGREGATE METRICS
+================================================================================
+
+Mode: hybrid
+  mrr         : 0.520
+  recall@1    : 0.133
+  recall@3    : 0.303
+  recall@5    : 0.377
+  recall@10   : 0.377
+  precision@1 : 0.400
+  precision@3 : 0.333
+  precision@5 : 0.280
+  precision@10: 0.140
+  ndcg@1      : 0.400
+  ndcg@3      : 0.493
+  ndcg@5      : 0.568
+  ndcg@10     : 0.568
+
+Mode: semantic
+  mrr         : 0.520
+  recall@1    : 0.133
+  recall@3    : 0.303
+  recall@5    : 0.377
+  recall@10   : 0.377
+  precision@1 : 0.400
+  precision@3 : 0.333
+  precision@5 : 0.280
+  precision@10: 0.140
+  ndcg@1      : 0.400
+  ndcg@3      : 0.493
+  ndcg@5      : 0.568
+  ndcg@10     : 0.568
+
+Mode: keyword
+  mrr         : 0.350
+  recall@1    : 0.100
+  recall@3    : 0.217
+  recall@5    : 0.233
+  recall@10   : 0.233
+  precision@1 : 0.300
+  precision@3 : 0.233
+  precision@5 : 0.160
+  precision@10: 0.080
+  ndcg@1      : 0.300
+  ndcg@3      : 0.363
+  ndcg@5      : 0.363
+  ndcg@10     : 0.363
+
+================================================================================
+EVALUATION COMPLETE
+================================================================================

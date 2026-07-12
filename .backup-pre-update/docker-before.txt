@@ -1,0 +1,5 @@
+rag-lw-worker rag-system-worker Up 3 days
+rag-lw-app-backend your-dockerhub-username/rag-backend:latest Up 5 days (healthy)
+rag-lw-frontend your-dockerhub-username/rag-frontend:latest Up 11 days (healthy)
+rag-lw-redis redis:7-alpine Up 11 days (healthy)
+rag-lw-postgres pgvector/pgvector:pg16 Up 11 days (healthy)

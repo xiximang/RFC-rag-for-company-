@@ -2,16 +2,25 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install minimal system dependencies for the API layer.
-# OCR/PDF/Office parsing is handled by the dedicated ingest-worker image.
-RUN sed -i 's|http://deb.debian.org|https://mirrors.ustc.edu.cn|g' /etc/apt/sources.list.d/debian.sources \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends curl gcc \
+# Install system dependencies for API layer and optional parsers.
+# These packages are required when OCR / PDF-to-image / audio parsing is enabled.
+# They are kept in the API image so health-check endpoints and local uploads can
+# validate files without crashing if the optional features are turned off.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        gcc \
+        tesseract-ocr \
+        tesseract-ocr-chi-sim \
+        tesseract-ocr-eng \
+        poppler-utils \
+        ffmpeg \
+        libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies as root (Tencent Cloud mirror, 19.8 MB/s)
+# Install Python dependencies as root
 COPY requirements.txt .
-RUN pip install --no-cache-dir -i https://mirrors.cloud.tencent.com/pypi/simple/ --trusted-host mirrors.cloud.tencent.com -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code and create a non-root user
 COPY . .

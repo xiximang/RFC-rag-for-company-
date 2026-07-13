@@ -15,6 +15,11 @@ from app.core.cache import CacheManager
 from app.core.exceptions import NotFoundException, PermissionDeniedException, ValidationException
 from app.retrieval.filters import VectorFilter
 from app.services.group_service import GroupService
+from app.schemas.permission import (
+    PermissionGrantRequest,
+    PermissionRevokeRequest,
+    PermissionValidationResponse,
+)
 
 class UnifiedPermissionInfo:
     def __init__(
@@ -331,6 +336,7 @@ class PermissionService:
         permissions: Optional[List[str]] = None,
         config: Optional[Dict[str, Any]] = None,
         field_type: Optional[str] = None,
+        _commit: bool = True,
     ) -> Any:
         """Unified grant entry supporting user/group targets and file_type/document/field/tag objects."""
         target_id_str = str(target_id)
@@ -408,16 +414,18 @@ class PermissionService:
                 )
                 self.db.add(perm)
                 perms.append(perm)
-            await self.db.commit()
-            for perm in perms:
-                await self.db.refresh(perm)
+            if _commit:
+                await self.db.commit()
+                for perm in perms:
+                    await self.db.refresh(perm)
             await self.invalidate_target_cache(target_type, target_id)
             return perms[0] if len(perms) == 1 else perms
         else:
             raise ValidationException(f"unsupported object_type: {object_type}")
 
-        await self.db.commit()
-        await self.db.refresh(perm)
+        if _commit:
+            await self.db.commit()
+            await self.db.refresh(perm)
         await self.invalidate_target_cache(target_type, target_id)
         if object_id:
             await self.cache.invalidate_document_cache(str(object_id))
@@ -431,6 +439,7 @@ class PermissionService:
         object_id: Optional[UUID] = None,
         object_key: Optional[str] = None,
         permission: Optional[str] = None,
+        _commit: bool = True,
     ) -> int:
         """Unified revoke entry. Returns the number of permission records removed."""
         target_id_str = str(target_id)
@@ -490,7 +499,8 @@ class PermissionService:
         else:
             raise ValidationException(f"unsupported object_type: {object_type}")
 
-        await self.db.commit()
+        if _commit:
+            await self.db.commit()
         await self.invalidate_target_cache(target_type, target_id)
         if object_id:
             await self.cache.invalidate_document_cache(str(object_id))
@@ -659,3 +669,154 @@ class PermissionService:
                     await self.cache.invalidate_user_cache(member_id)
             except (NotFoundException, AttributeError):
                 pass
+
+    # ------------------------------------------------------------------ #
+    # Batch ACL operations
+    # ------------------------------------------------------------------ #
+    async def grant_permissions_batch(
+        self, items: List[PermissionGrantRequest]
+    ) -> List[Any]:
+        """Batch grant permissions atomically.
+
+        Iterates over ``items`` and calls :meth:`grant_permission` for each one.
+        If any item fails, the whole transaction is rolled back and a
+        ``ValidationException`` is raised.
+        """
+        results: List[Any] = []
+        try:
+            async with self.db.begin():
+                for item in items:
+                    result = await self.grant_permission(
+                        _commit=False,
+                        target_type=item.target_type,
+                        target_id=item.target_id,
+                        object_type=item.object_type,
+                        object_id=item.object_id,
+                        object_key=item.object_key,
+                        permission=item.permission,
+                        permissions=item.permissions,
+                        config=item.config,
+                        field_type=item.field_type,
+                    )
+                    results.append(result)
+        except Exception as exc:
+            raise ValidationException(f"批量授权失败: {exc}") from exc
+        return results
+
+    async def revoke_permissions_batch(
+        self, items: List[PermissionRevokeRequest]
+    ) -> List[int]:
+        """Batch revoke permissions atomically.
+
+        Iterates over ``items`` and calls :meth:`revoke_permission` for each one.
+        If any item fails, the whole transaction is rolled back and a
+        ``ValidationException`` is raised.
+        """
+        results: List[int] = []
+        try:
+            async with self.db.begin():
+                for item in items:
+                    deleted = await self.revoke_permission(
+                        _commit=False,
+                        target_type=item.target_type,
+                        target_id=item.target_id,
+                        object_type=item.object_type,
+                        object_id=item.object_id,
+                        object_key=item.object_key,
+                        permission=item.permission,
+                    )
+                    results.append(deleted)
+        except Exception as exc:
+            raise ValidationException(f"批量撤销失败: {exc}") from exc
+        return results
+
+    async def validate_permission_inheritance(
+        self, target_type: str, target_id: UUID
+    ) -> PermissionValidationResponse:
+        """Detect conflicting permission assignments for a target.
+
+        Conflicts include:
+        - Both positive (READ/WRITE/ADMIN/allow) and negative (NONE/DENY)
+          permissions on the same object for the same target.
+        - Conflicts between a user's directly assigned permissions and the
+          permissions inherited from the user's groups.
+        """
+        all_perms = await self.list_permissions(target_type, target_id)
+
+        # Include group permissions when validating a user so that
+        # user/group conflicts are also reported.
+        if target_type == "user":
+            groups = await self.get_user_groups(target_id)
+            for group in groups:
+                group_perms = await self.list_permissions("group", group.id)
+                for gp in group_perms:
+                    all_perms.append(
+                        UnifiedPermissionInfo(
+                            id=gp.id,
+                            target_type="group",
+                            target_id=str(group.id),
+                            object_type=gp.object_type,
+                            object_id=gp.object_id,
+                            object_key=gp.object_key,
+                            permission=gp.permission,
+                            created_at=gp.created_at,
+                        )
+                    )
+
+        conflicts = self._detect_permission_conflicts(all_perms)
+        return PermissionValidationResponse(
+            valid=len(conflicts) == 0, conflicts=conflicts
+        )
+
+    def _detect_permission_conflicts(
+        self, perms: List[UnifiedPermissionInfo]
+    ) -> List[Dict[str, Any]]:
+        """Group permissions by object and detect contradictory values."""
+        grouped: Dict[tuple, List[UnifiedPermissionInfo]] = {}
+        for p in perms:
+            obj_key = p.object_key if p.object_id is None else p.object_id
+            key = (p.object_type, obj_key)
+            grouped.setdefault(key, []).append(p)
+
+        conflicts: List[Dict[str, Any]] = []
+        for (obj_type, obj_key), group in grouped.items():
+            is_conflict = False
+            if obj_type == "file_type":
+                # file_type permissions are stored as comma-separated values.
+                values = set()
+                for p in group:
+                    values.update(p.permission.upper().split(","))
+                positive = values & {"READ", "WRITE", "ADMIN", "UPLOAD", "DELETE"}
+                negative = values & {"NONE", "DENY"}
+                is_conflict = bool(positive and negative)
+            elif obj_type == "document":
+                values = {p.permission.upper() for p in group}
+                positive = values & {"READ", "WRITE", "ADMIN"}
+                negative = values & {"NONE", "DENY"}
+                is_conflict = bool(positive and negative)
+            elif obj_type in ("tag", "field"):
+                values = {p.permission.upper() for p in group}
+                allows = values & {"ALLOW", "READ"}
+                denies = values & {"DENY", "NONE"}
+                is_conflict = bool(allows and denies)
+            else:
+                values = {p.permission.upper() for p in group}
+
+            if is_conflict:
+                conflicts.append(
+                    {
+                        "object_type": obj_type,
+                        "object_id": obj_key,
+                        "permissions": sorted(values),
+                        "sources": [
+                            {
+                                "target_type": p.target_type,
+                                "target_id": p.target_id,
+                                "permission": p.permission,
+                            }
+                            for p in group
+                        ],
+                    }
+                )
+
+        return conflicts

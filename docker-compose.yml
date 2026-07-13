@@ -81,6 +81,10 @@ services:
       - "8080:8080"
     environment:
       PORT: "8080"
+      # 功能开关：私有化 OCR / 音频解析
+      OCR_ENABLED: ${OCR_ENABLED:-true}
+      AUDIO_TRANSCRIPTION_ENABLED: ${AUDIO_TRANSCRIPTION_ENABLED:-true}
+      TESSDATA_PREFIX: ${TESSDATA_PREFIX:-/usr/share/tesseract-ocr/4.00/tessdata}
       # 数据库/缓存/模型等配置统一由 backend/.env 提供，避免 Docker 环境变量覆盖 .env 中的真实模型配置
     volumes:
       - ./backend/.env:/app/.env
@@ -132,6 +136,10 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-rag-documents}
       MILVUS_HOST: ${MILVUS_HOST:-milvus-standalone}
       MILVUS_PORT: ${MILVUS_PORT:-19530}
+      # 功能开关：私有化 OCR / 音频解析
+      OCR_ENABLED: ${OCR_ENABLED:-true}
+      AUDIO_TRANSCRIPTION_ENABLED: ${AUDIO_TRANSCRIPTION_ENABLED:-true}
+      TESSDATA_PREFIX: ${TESSDATA_PREFIX:-/usr/share/tesseract-ocr/4.00/tessdata}
     volumes:
       - ./backend/.env:/app/.env:ro
     depends_on:
@@ -218,6 +226,10 @@ services:
       MILVUS_HOST: ${MILVUS_HOST:-milvus-standalone}
       MILVUS_PORT: ${MILVUS_PORT:-19530}
       EMBEDDING_MODEL_URL: ${EMBEDDING_MODEL_URL:-http://embedding-service:8080}
+      # 功能开关：私有化 OCR / 音频解析（embed worker 通常不解析原始文件，保持与全局一致）
+      OCR_ENABLED: ${OCR_ENABLED:-true}
+      AUDIO_TRANSCRIPTION_ENABLED: ${AUDIO_TRANSCRIPTION_ENABLED:-true}
+      TESSDATA_PREFIX: ${TESSDATA_PREFIX:-/usr/share/tesseract-ocr/4.00/tessdata}
     volumes:
       - ./backend/.env:/app/.env:ro
     # TODO: 私有化 GPU 环境启用 nvidia 运行时后，可添加 deploy.resources.reservations.devices

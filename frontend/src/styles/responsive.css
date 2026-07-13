@@ -1,0 +1,213 @@
+/*
+ * Enterprise Private RAG - Responsive Utilities
+ * Breakpoints:
+ *   xs: < 576px
+ *   sm: >= 576px
+ *   md: >= 768px
+ *   lg: >= 992px
+ *   xl: >= 1200px
+ */
+
+/* Base: scale root font size on small screens */
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 575px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Mobile side menu toggle
+   -------------------------------------------------------------------------- */
+
+.mobile-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+@media (min-width: 768px) {
+  .mobile-menu-btn {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Table horizontal scroll container
+   -------------------------------------------------------------------------- */
+
+.responsive-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.responsive-table-scroll .ant-table {
+  min-width: 640px;
+}
+
+@media (max-width: 575px) {
+  .responsive-table-scroll .ant-table {
+    min-width: 480px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive forms: vertical layout + full-width controls on small screens
+   -------------------------------------------------------------------------- */
+
+.responsive-form .ant-form-item {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 575px) {
+  .responsive-form .ant-form-item-label {
+    text-align: left;
+  }
+
+  .responsive-form .ant-input,
+  .responsive-form .ant-input-number,
+  .responsive-form .ant-select,
+  .responsive-form .ant-picker {
+    width: 100%;
+  }
+
+  .responsive-form .ant-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Page layout helpers
+   -------------------------------------------------------------------------- */
+
+.responsive-page {
+  width: 100%;
+}
+
+/* Hide desktop-only elements on small screens */
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .desktop-only {
+    display: initial;
+  }
+}
+
+/* Hide mobile-only elements on large screens */
+.mobile-only {
+  display: initial;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Search console: stack panels vertically on small screens
+   -------------------------------------------------------------------------- */
+
+.search-console-layout {
+  display: flex;
+  gap: 24px;
+  height: calc(100vh - 180px);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.search-console-layout > .ant-card {
+  min-width: 0;
+}
+
+@media (max-width: 991px) {
+  .search-console-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 180px);
+    overflow: visible;
+  }
+
+  .search-console-layout > .ant-card {
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  .search-console-layout .search-console-sessions,
+  .search-console-layout .search-console-config {
+    max-height: 360px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Header user info truncation
+   -------------------------------------------------------------------------- */
+
+.header-user-info {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 575px) {
+  .header-user-info {
+    max-width: 80px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Modal responsiveness
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 575px) {
+  .ant-modal {
+    max-width: 94vw !important;
+  }
+
+  .ant-modal-body {
+    padding: 16px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Breakpoint visibility utilities
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 575px) {
+  .hide-xs {
+    display: none !important;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+  .hide-sm {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .hide-md {
+    display: none !important;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+  .hide-lg {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hide-xl {
+    display: none !important;
+  }
+}

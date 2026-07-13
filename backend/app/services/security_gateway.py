@@ -8,6 +8,7 @@ from app.core.metrics import rag_permission_intercepts_total
 from app.pipelines.keyword_annotator import LEVEL_ORDER
 from app.services.keyword_service import KeywordService
 from app.services.permission_service import PermissionService
+from app.services.prompt_injection_classifier import prompt_injection_classifier
 
 
 # Common prompt-injection / jailbreak indicators used for lightweight detection.
@@ -120,16 +121,27 @@ class SecurityGateway:
         }
     
     def detect_prompt_injection(self, query: str) -> bool:
-        """Detect obvious prompt-injection / jailbreak attempts.
+        """Detect prompt-injection / jailbreak attempts.
 
-        This is a static guard intended to catch common prefix-based attacks
-        before they reach the LLM.  It does not replace a dedicated input
-        classifier but provides a fast, auditable first line of defence.
+        Uses a two-stage defence:
+
+        1. Conservative static regex patterns catch obvious prefix attacks.
+        2. A lightweight classifier scores the query and blocks when the
+           score exceeds ``PROMPT_INJECTION_THRESHOLD`` (default 0.7).
+
+        The classifier reduces false positives from long benign documents
+        because its features are keyword-density and length-normalized.
         """
         if not query:
             return False
+
         text = query.lower()
-        return any(re.search(pattern, text) for pattern in PROMPT_INJECTION_PATTERNS)
+        static_hit = any(re.search(pattern, text) for pattern in PROMPT_INJECTION_PATTERNS)
+
+        result = prompt_injection_classifier.classify(query)
+        classifier_hit = result["score"] >= result["threshold"]
+
+        return static_hit or classifier_hit
 
     def mask_entities(self, text: str) -> str:
         """L3机密内容：对常见实体做脱敏"""

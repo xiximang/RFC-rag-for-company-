@@ -8,6 +8,17 @@ _transform: true
 services:
   - name: app-backend
     url: http://app-backend:8080
+    healthchecks:
+      active:
+        type: http
+        http_path: /api/v1/health
+        timeout: 5
+        healthy:
+          interval: 10
+          successes: 2
+        unhealthy:
+          interval: 10
+          http_failures: 3
     routes:
       - name: app-backend-api
         paths:
@@ -22,6 +33,17 @@ services:
 
   - name: app-backend-external
     url: http://app-backend:8080
+    healthchecks:
+      active:
+        type: http
+        http_path: /api/v1/health
+        timeout: 5
+        healthy:
+          interval: 10
+          successes: 2
+        unhealthy:
+          interval: 10
+          http_failures: 3
     routes:
       - name: app-backend-external-api
         paths:

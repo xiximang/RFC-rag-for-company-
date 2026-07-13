@@ -93,7 +93,7 @@ def test_document_pipeline_html():
 
 
 def test_image_pipeline_without_ocr(monkeypatch):
-    """When OCR dependencies are absent, image pipeline still returns a valid chunk."""
+    """When OCR dependencies are absent or disabled, image pipeline still returns a valid chunk."""
     pipeline = ImageIngestPipeline()
 
     # Create a tiny valid PNG (1x1 pixel)
@@ -113,7 +113,7 @@ def test_image_pipeline_without_ocr(monkeypatch):
 
 
 def test_audio_pipeline_placeholder():
-    """When transcription dependencies are absent, audio pipeline returns a placeholder."""
+    """When transcription dependencies are absent or disabled, audio pipeline returns a placeholder."""
     pipeline = AudioIngestPipeline()
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
         f.write(b"fake audio data")
@@ -122,6 +122,6 @@ def test_audio_pipeline_placeholder():
     chunks = pipeline.process(path, uuid4())
     assert len(chunks) == 1
     assert chunks[0]["modality"] == "audio"
-    assert "暂无法转录" in chunks[0]["content"]
+    assert "[audio transcription disabled]" in chunks[0]["content"]
     assert chunks[0]["metadata"].get("format") == "mp3"
     os.unlink(path)

@@ -1,5 +1,49 @@
 # 变更日志
 
+## 2026-07-04
+
+### 新增与完善
+
+- **首页融合与前端优化**：
+  - 将新营销首页作为未登录官网页接入 React，资源压缩后总大小约 2.3MB。
+  - `frontend/src/landing/LandingPage.tsx` + `landing-theme.css` 实现品牌首页。
+  - 调整 `Login.tsx`、`NotFound.tsx`、`ProductPage.tsx`、`AppLayout.tsx`、`router.tsx` 完成路由与布局融合。
+  - `pnpm lint && pnpm build` 通过。
+
+- **账号级外部 API 体系**：
+  - 新增前端 `frontend/src/pages/ApiKeys.tsx` API Key 管理页面。
+  - 新增 `GET /api/v1/api-keys/scopes` 接口。
+  - 修复 `external_chat` 非流式返回 `sources=[]` 的问题。
+  - 修复 `external.py` 文档访问时 `UUID` 重复包装导致的 500。
+
+- **资源占用优化**：
+  - `docker-compose.lightweight.yml` 进一步裁剪为 4 容器（postgres / redis / app-backend / frontend）。
+  - 移除独立 worker，`CELERY_TASK_ALWAYS_EAGER=true`，backend uvicorn workers = 1。
+  - 实测总内存占用约 263 MB（backend 202 MB + postgres 40 MB + redis 7 MB + frontend 14 MB），满足 < 1 GB 目标。
+
+- **P0/P1 配置与权限缺口补齐**：
+  - 文档上传/链接接口增加 `_require_kb_access` 校验，非所有者上传返回 403。
+  - 权限服务新增批量授权/撤销与继承冲突校验：`POST /permissions/batch-grant`、`POST /permissions/batch-revoke`、`GET /permissions/validate`。
+  - Alertmanager 支持通过环境变量配置真实 webhook/email 通道。
+  - Kong 为 backend/external 服务增加 active healthchecks。
+  - K8s app-backend Deployment 增加 `startupProbe`。
+  - CI 镜像扫描默认对 HIGH/CRITICAL 失败阻断。
+
+- **P2 长期能力占位模块**：
+  - 新增知识图谱、IM 集成（企微/飞书/钉钉）、Agentic RAG 的服务与 API 占位实现。
+
+- **国际化与移动端适配基础**：
+  - 实现不依赖新 npm 包的 `I18nContext`，提供 `zh/en` 语言包。
+  - `Login.tsx` 与 `AppLayout.tsx` 替换硬编码中文。
+  - 新增移动端适配建议文档。
+
+- **ToB 运营与交付文档**：
+  - 新增 `docs/deliverables/`：PRD、用户手册、FAQ、Sprint 计划、上线 Checklist、用户画像、痛点优先级矩阵、需求调研报告、测试报告、培训 PPT 大纲。
+
+- **全功能 API 测试**：
+  - 新增 `scripts/agent_api_harness.py`，覆盖 11 个区域、73 项检查。
+  - 当前结果：73 PASS / 2 SKIP（轻量版缺少 Embedding/LLM 服务导致搜索/生成链路 503）/ 0 FAIL。
+
 ## 2026-06-15
 
 ### 新增与完善

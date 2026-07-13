@@ -1,7 +1,10 @@
+import logging
 import os
 from typing import List, Dict, Any, Tuple
 from uuid import UUID
 from app.pipelines.base import BaseIngestPipeline
+
+logger = logging.getLogger(__name__)
 
 
 class AudioIngestPipeline(BaseIngestPipeline):
@@ -39,12 +42,19 @@ class AudioIngestPipeline(BaseIngestPipeline):
         }]
 
     def _transcribe(self, file_path: str) -> Tuple[str, Dict[str, Any]]:
-        """优先使用 Whisper 转录，回退到 speech_recognition，最后返回占位提示。"""
+        """优先使用 Whisper 转录，回退到 speech_recognition，开关关闭或依赖缺失时返回占位提示。"""
         ext = os.path.splitext(file_path)[1].lower()
         audio_metadata = {
             "format": ext.lstrip("."),
             "duration_seconds": self._get_duration(file_path),
         }
+
+        if os.getenv("AUDIO_TRANSCRIPTION_ENABLED", "true").lower() != "true":
+            logger.warning(
+                "Audio transcription is disabled by AUDIO_TRANSCRIPTION_ENABLED=false for %s",
+                file_path,
+            )
+            return "[audio transcription disabled]", audio_metadata
 
         # TODO: 本地私有化部署时建议优先使用 faster-whisper / whisper.cpp 以降低资源占用。
         try:
@@ -55,9 +65,9 @@ class AudioIngestPipeline(BaseIngestPipeline):
                 "duration", audio_metadata["duration_seconds"]
             )
             return result.get("text", ""), audio_metadata
-        except Exception:
+        except Exception as exc:
             # Whisper 未安装或加载失败，继续回退。
-            pass
+            logger.debug("Whisper transcription failed for %s: %s", file_path, exc)
 
         # speech_recognition 仅原生支持 WAV；其他格式需配合 pydub 转换。
         if ext == ".wav":
@@ -68,15 +78,13 @@ class AudioIngestPipeline(BaseIngestPipeline):
                     audio_data = recognizer.record(source)
                     text = recognizer.recognize_google(audio_data, language="zh-CN")
                 return text, audio_metadata
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("speech_recognition fallback failed for %s: %s", file_path, exc)
 
-        # TODO: 安装 pydub 后可先统一转换为 WAV 再调用 speech_recognition。
-        transcript = (
-            f"[音频文件 {os.path.basename(file_path)} 暂无法转录："
-            "缺少语音识别依赖（openai-whisper 或 SpeechRecognition）]"
+        logger.warning(
+            "Audio transcription dependencies missing or failed for %s", file_path
         )
-        return transcript, audio_metadata
+        return "[audio transcription disabled]", audio_metadata
 
     def _get_duration(self, file_path: str) -> Any:
         """使用 mutagen 获取音频时长，未安装时返回 None。"""

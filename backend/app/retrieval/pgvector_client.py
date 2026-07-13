@@ -40,7 +40,7 @@ class PGVectorStore(BaseVectorStore):
 
     backend_name = "pgvector"
 
-    TEXT_DIM = 768
+    TEXT_DIM = 1024
     IMAGE_DIM = 512
 
     def __init__(self) -> None:

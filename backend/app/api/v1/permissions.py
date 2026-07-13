@@ -2,17 +2,19 @@ from typing import Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.api.v1.auth import get_current_user
+from app.api.v1.auth import get_current_user, is_admin
 from app.database import get_db
 from app.services.permission_service import PermissionService
 from app.core.cache import CacheManager
-from app.core.exceptions import NotFoundException, ValidationException
+from app.core.exceptions import NotFoundException, PermissionDeniedException, ValidationException
 from app.schemas.permission import (
     FileTypePermissionCreate, DocumentPermissionCreate,
     FieldPermissionCreate, TagPermissionCreate,
     PermissionGrantRequest, PermissionRevokeRequest,
+    PermissionBatchGrantRequest, PermissionBatchRevokeRequest,
     PermissionListResponse,
     PermissionCheckResponse, ObjectPermissionCheckResponse,
+    PermissionValidationResponse,
 )
 from app.schemas.user import UserResponse
 
@@ -103,14 +105,19 @@ async def set_tag_permission(
     if not tag_ids:
         raise ValidationException("allowed_tags or denied_tags is required")
 
+    # First tag becomes the primary object_id; remaining tags packed into object_key.
+    primary_tag_id = tag_ids[0]
+    extra_tag_ids = tag_ids[1:]
     perm = await service.grant_permission(
         target_type=perm_data.target_type,
         target_id=perm_data.target_id,
         object_type="tag",
-        object_key=",".join(str(t) for t in tag_ids),
+        object_id=primary_tag_id,
+        object_key=",".join(str(t) for t in extra_tag_ids) if extra_tag_ids else None,
         permission="allow" if perm_data.allowed_tags else "deny",
     )
-    return {"message": "标签权限设置成功", "permission_id": str(perm.id)}
+    perm_id = perm[0].id if isinstance(perm, list) else perm.id
+    return {"message": "标签权限设置成功", "permission_id": str(perm_id)}
 
 
 @router.get("/check/{doc_id}", response_model=PermissionCheckResponse)
@@ -134,7 +141,9 @@ async def grant_permission(
     service: PermissionService = Depends(get_permission_service),
     current_user: UserResponse = Depends(get_current_user),
 ):
-    """统一授权入口。"""
+    """统一授权入口。P0-2 修复：仅 admin 可调用。"""
+    if not is_admin(current_user):
+        raise PermissionDeniedException("需要管理员权限才能授权")
     perm = await service.grant_permission(
         target_type=request.target_type,
         target_id=request.target_id,
@@ -165,6 +174,48 @@ async def revoke_permission(
         permission=request.permission,
     )
     return {"message": "撤销成功", "deleted_count": deleted}
+
+
+@router.post("/batch-grant")
+async def grant_permissions_batch(
+    request: PermissionBatchGrantRequest,
+    service: PermissionService = Depends(get_permission_service),
+    current_user: UserResponse = Depends(get_current_user),
+):
+    """批量授权入口。任意子项失败会回滚整个批次。P0-2 修复：仅 admin 可调用。"""
+    if not is_admin(current_user):
+        raise PermissionDeniedException("需要管理员权限才能批量授权")
+    results = await service.grant_permissions_batch(request.items)
+    return {
+        "message": "批量授权成功",
+        "granted_count": len(results),
+        "permission_ids": [str(getattr(p, "id", "")) for p in results],
+    }
+
+
+@router.post("/batch-revoke")
+async def revoke_permissions_batch(
+    request: PermissionBatchRevokeRequest,
+    service: PermissionService = Depends(get_permission_service),
+    current_user: UserResponse = Depends(get_current_user),
+):
+    """批量撤销入口。任意子项失败会回滚整个批次。"""
+    deleted_counts = await service.revoke_permissions_batch(request.items)
+    return {
+        "message": "批量撤销成功",
+        "total_deleted": sum(deleted_counts),
+    }
+
+
+@router.get("/validate", response_model=PermissionValidationResponse)
+async def validate_permission_inheritance(
+    target_type: str = Query(..., description="user or group"),
+    target_id: UUID = Query(..., description="target id"),
+    service: PermissionService = Depends(get_permission_service),
+    current_user: UserResponse = Depends(get_current_user),
+):
+    """检查指定目标的权限是否存在冲突（含用户与其所属用户组之间的继承冲突）。"""
+    return await service.validate_permission_inheritance(target_type, target_id)
 
 
 @router.get("/list", response_model=PermissionListResponse)

@@ -1,0 +1,58 @@
+# Lightweight runtime dependencies (no OCR / audio / Milvus / Meilisearch).
+# Pipelines gracefully degrade when these are absent.
+#
+# 本文件由 requirements.txt 精简而来，专用于 docker-compose.lightweight.yml：
+#   - 移除 unstructured（代码未使用 + 间接拉入 spacy/llvmlite/thinc/blis/numba 全家桶约 360 MB）
+#   - 移除 pymilvus / meilisearch（轻量版用 pgvector + PostgreSQL FTS）
+#   - 不安装 Pillow 之外的图像解析重依赖
+#
+# 全量版请继续使用 requirements.txt。
+
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+sqlalchemy[asyncio]>=2.0.0
+asyncpg>=0.29.0
+alembic>=1.13.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Celery / Redis (lightweight uses redis broker, CELERY_TASK_ALWAYS_EAGER=true)
+celery>=5.3.0
+redis>=5.0.0
+
+# Postgres + pgvector
+pgvector>=0.2.5
+psycopg2-binary>=2.9.9
+
+# Local file storage (lightweight uses LOCAL_STORAGE_BACKEND=local)
+# boto3 still required by app.storage.__init__ (S3FileStorage is always imported)
+aiofiles>=23.0.0
+python-multipart>=0.0.9
+boto3>=1.34.0
+
+# Document parsers used by DocumentIngestPipeline / ExcelIngestPipeline
+pdfplumber>=0.10.0
+python-docx>=1.1.0
+openpyxl>=3.1.0
+pandas>=2.2.0
+
+# Image processing (no OCR in lightweight mode)
+pillow>=10.2.0
+requests>=2.31.0
+
+# Auth
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# Sensitive keyword Aho-Corasick
+pyahocorasick>=0.9.0
+
+# Metrics
+prometheus-client>=0.20.0
+
+# HTTP / SSE
+httpx>=0.27.0
+email-validator>=2.0.0
+sse-starlette>=2.0.0
+
+# LLM client only (no Milvus SDK needed in lightweight mode)

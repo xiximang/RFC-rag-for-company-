@@ -1,22 +1,31 @@
 global:
-  # No SMTP is configured by default. Configure these for email receivers.
-  # smtp_smarthost: 'localhost:25'
-  # smtp_from: 'alertmanager@example.com'
+  # No SMTP is configured by default. Uncomment and configure real values to enable email receivers.
+  # smtp_smarthost: '${SMTP_SMARTHOST:-localhost:25}'
+  # smtp_from: '${SMTP_FROM:-alertmanager@example.com}'
   # smtp_require_tls: false
 
 # Default receiver for all alerts unless matched by a route.
 receivers:
   - name: default
     # Placeholder webhook that keeps Alertmanager starting even when no real
-    # notification endpoint is available. Replace with PagerDuty/Slack/email/etc.
+    # notification endpoint is available. Override the URL via the ALERT_WEBHOOK_URL env var.
     webhook_configs:
-      - url: 'http://127.0.0.1:5001/_alertmanager/webhook'
+      - url: '${ALERT_WEBHOOK_URL:-http://127.0.0.1:5001/_alertmanager/webhook}'
         send_resolved: false
 
   - name: critical
     webhook_configs:
-      - url: 'http://127.0.0.1:5001/_alertmanager/webhook'
+      - url: '${ALERT_WEBHOOK_URL:-http://127.0.0.1:5001/_alertmanager/webhook}'
         send_resolved: false
+
+  # Example email receiver. Keep commented unless real SMTP settings are configured above;
+  # this ensures Alertmanager starts cleanly without a working SMTP server.
+  # - name: email
+  #   email_configs:
+  #     - to: '${ALERT_EMAIL_TO:-admin@example.com}'
+  #       from: '${SMTP_FROM:-alertmanager@example.com}'
+  #       smarthost: '${SMTP_SMARTHOST:-localhost:25}'
+  #       send_resolved: true
 
 route:
   receiver: default

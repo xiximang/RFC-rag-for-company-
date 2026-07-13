@@ -53,15 +53,39 @@ def _create_async_session() -> AsyncSession:
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def process_document(self, doc_id: str) -> Dict[str, Any]:
-    """Celery task that ingests a single document end-to-end."""
+    """Celery task that ingests a single document end-to-end.
+
+    Lightweight mode (EAGER=true) runs inside the FastAPI request handler.
+    We schedule the async coroutine on the running event loop using
+    ``create_task`` and return immediately to avoid deadlocking the loop.
+    """
     logger.info("Starting ingest for document %s", doc_id)
     try:
-        result = asyncio.run(_process_document_async(doc_id))
-        return result
-    except Exception as exc:
-        logger.exception("Ingest failed for document %s", doc_id)
-        asyncio.run(_mark_failed(doc_id, str(exc), {"retry_count": self.request.retries}))
-        raise self.retry(exc=exc) from exc
+        running_loop = asyncio.get_event_loop()
+        if running_loop.is_running():
+            # EAGER mode inside an async context: fire-and-forget on the
+            # running loop. Don't wait on the result - that would deadlock.
+            asyncio.ensure_future(_process_document_async_safe(doc_id))
+            return {"scheduled": True, "doc_id": doc_id}
+        else:
+            return asyncio.run(_process_document_async(doc_id))
+    except RuntimeError:
+        # No loop yet (e.g. standalone Celery worker)
+        return asyncio.run(_process_document_async(doc_id))
+
+
+async def _process_document_async_safe(doc_id: str) -> Dict[str, Any]:
+    """Fire-and-forget wrapper around ``_process_document_async`` for EAGER mode.
+
+    Used by ``BackgroundTasks`` so that ingest failures don't bubble back to
+    the HTTP client. Status updates still happen through the same DB session
+    used by the pipeline.
+    """
+    try:
+        return await _process_document_async(doc_id)
+    except Exception:
+        logger.exception("Background ingest failed for document %s", doc_id)
+        return {}
 
 
 async def _process_document_async(doc_id: str) -> Dict[str, Any]:

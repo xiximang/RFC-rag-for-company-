@@ -78,6 +78,171 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({ children, delay = 0 }
   )
 }
 
+/**
+ * Flow diagram card: shows a horizontal pipeline of nodes with arrow connectors.
+ * Used in the Quick Start section to visualise data / query / permission / integration flows.
+ */
+interface FlowStep {
+  node: string
+  icon: string
+  color: string
+  hint: string
+}
+
+interface FlowDiagramCardProps {
+  title: string
+  subtitle: string
+  steps: FlowStep[]
+  gradient: string
+}
+
+const FlowDiagramCard: React.FC<FlowDiagramCardProps> = ({ title, subtitle, steps, gradient }) => {
+  return (
+    <Col xs={24} lg={12}>
+      <Card
+        style={{ borderRadius: 16, border: '1px solid #e5e7eb', height: '100%' }}
+        bodyStyle={{ padding: '24px 22px 28px' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <div
+            style={{
+              width: 4,
+              height: 22,
+              background: gradient,
+              borderRadius: 2,
+            }}
+          />
+          <Title level={5} style={{ margin: 0, color: brandColor }}>
+            {title}
+          </Title>
+        </div>
+        <Text style={{ color: mutedColor, fontSize: 12, display: 'block', marginBottom: 20 }}>
+          {subtitle}
+        </Text>
+
+        {/* Flow nodes */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'stretch',
+            gap: 0,
+            overflowX: 'auto',
+            paddingBottom: 4,
+          }}
+        >
+          {steps.map((s, idx) => (
+            <div
+              key={idx}
+              style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}
+            >
+              {/* Node */}
+              <div
+                style={{
+                  minWidth: 92,
+                  maxWidth: 110,
+                  padding: '12px 8px',
+                  borderRadius: 10,
+                  background: `linear-gradient(135deg, ${s.color}15 0%, ${s.color}08 100%)`,
+                  border: `1px solid ${s.color}40`,
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+                title={s.hint}
+              >
+                <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: brandColor,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {s.node}
+                </div>
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    width: 18,
+                    height: 18,
+                    borderRadius: '50%',
+                    background: s.color,
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: `0 2px 6px ${s.color}55`,
+                  }}
+                >
+                  {idx + 1}
+                </div>
+              </div>
+              {/* Arrow connector */}
+              {idx < steps.length - 1 && (
+                <div
+                  style={{
+                    width: 24,
+                    height: 2,
+                    background: `linear-gradient(90deg, ${s.color} 0%, ${steps[idx + 1].color} 100%)`,
+                    position: 'relative',
+                    flexShrink: 0,
+                    margin: '0 2px',
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: -1,
+                      top: -4,
+                      width: 0,
+                      height: 0,
+                      borderLeft: `6px solid ${steps[idx + 1].color}`,
+                      borderTop: '5px solid transparent',
+                      borderBottom: '5px solid transparent',
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Hints list */}
+        <div style={{ marginTop: 18, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {steps.map((s, idx) => (
+            <div
+              key={idx}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 11,
+                color: mutedColor,
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: s.color,
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ fontWeight: 600, color: '#374151' }}>{s.node}:</span>
+              <span>{s.hint}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </Col>
+  )
+}
+
 const painPoints = [
   {
     title: '数据孤岛',
@@ -157,6 +322,87 @@ const ragSteps = [
   { title: '混合检索', desc: '向量 + BM25 + Rerank 召回' },
   { title: '权限过滤', desc: '五级权限实时过滤结果' },
   { title: '可信生成', desc: '带引用溯源的流式回答' },
+]
+
+/* ──────────────── 快速入手 Quick Start ──────────────── */
+
+const quickStartSteps = [
+  {
+    no: '01',
+    title: '登录系统',
+    desc: '使用 admin / admin123 登录工作台；首次登录后可进入「系统配置」修改密码。',
+    icon: '🔑',
+    color: '#3b82f6',
+    detail: ['浏览器访问 http://localhost:3002', '默认账号 admin / admin123', '登录后默认进入「知识库」工作台'],
+  },
+  {
+    no: '02',
+    title: '创建知识库',
+    desc: '在「知识库 → 我的知识库」点击「+ 新建知识库」，填写名称与描述，可见范围选择「公开 / 部门 / 指定用户」。',
+    icon: '📚',
+    color: '#8b5cf6',
+    detail: ['名称建议使用业务名，如"财务制度"', '可见范围决定谁能检索该 KB', '创建后自动获得 KB ID，可用于 API 调用'],
+  },
+  {
+    no: '03',
+    title: '上传文档',
+    desc: '在「上传中心」选择目标 KB，拖拽或选择文件上传。支持 PDF、Word、Excel、图片、音视频等 100+ 格式。',
+    icon: '📤',
+    color: '#06b6d4',
+    detail: ['单文件 ≤ 500 MB，批量 ≤ 50 个', '支持链接型文档（URL 自动抓取）', '后台自动解析、切分、向量化'],
+  },
+  {
+    no: '04',
+    title: '检索与问答',
+    desc: '在「搜索控制台」选择 KB，输入问题即可触发混合检索；或到「聊天」创建会话，享受多轮对话。',
+    icon: '🔍',
+    color: accentColor,
+    detail: ['支持语义 / 关键词 / 混合三种检索', '每条回答附原文引用（可追溯）', '支持流式输出与敏感词拦截'],
+  },
+  {
+    no: '05',
+    title: '权限与集成',
+    desc: '在「权限管理」配置 L1-L4 四级权限，在「API Key」生成对外接口，OA / IM / ERP 即可对接。',
+    icon: '🔐',
+    color: '#10b981',
+    detail: ['L1 文件类型 / L2 文档 / L3 字段 / L4 标签', 'API Key 支持 scope 粒度控制', 'Kong 网关统一暴露对外 API'],
+  },
+]
+
+const documentLifecycle = [
+  { node: '上传文件', icon: '📤', color: '#3b82f6', hint: '用户拖拽 / API 上传' },
+  { node: '格式识别', icon: '🔎', color: '#06b6d4', hint: 'PDF / Word / Excel / 图片 / 音视频 / URL' },
+  { node: '智能解析', icon: '⚙️', color: '#0ea5e9', hint: 'OCR + 表格识别 + ASR + 结构提取' },
+  { node: '切片入库', icon: '🧩', color: '#6366f1', hint: '按段落 / 标题 / 语义切分为 Chunk' },
+  { node: '向量化', icon: '🧠', color: '#8b5cf6', hint: 'Embedding 模型写入向量库' },
+  { node: '索引完成', icon: '✅', color: '#10b981', hint: 'Chunk 可被检索与问答' },
+]
+
+const retrievalFlow = [
+  { node: '用户提问', icon: '💬', color: '#3b82f6', hint: '选择 KB + 自然语言问题' },
+  { node: '查询改写', icon: '✍️', color: '#06b6d4', hint: '同义词、口语化 → 标准表达' },
+  { node: '混合检索', icon: '🔀', color: accentColor, hint: '向量 + 关键词并行召回' },
+  { node: 'Rerank', icon: '🎯', color: '#f59e0b', hint: '精排模型重排序 Top-K' },
+  { node: '权限过滤', icon: '🛡️', color: '#10b981', hint: 'L1-L4 实时过滤 Chunk' },
+  { node: '带引用生成', icon: '📝', color: '#ef4444', hint: 'LLM 输出 + 来源标注' },
+]
+
+const permissionFlow = [
+  { node: '用户登录', icon: '👤', color: '#3b82f6', hint: 'JWT 解析身份 / 部门 / 安全等级' },
+  { node: 'KB 授权', icon: '📚', color: '#06b6d4', hint: '判断 KB 是否对用户可见' },
+  { node: '文档 ACL', icon: '📄', color: '#0ea5e9', hint: '允许 / 拒绝列表匹配' },
+  { node: '字段过滤', icon: '🔍', color: '#6366f1', hint: 'L1 文件类型 + L3 敏感字段' },
+  { node: '标签匹配', icon: '🏷️', color: '#8b5cf6', hint: 'L4 密级 / 部门 / 项目标签' },
+  { node: '授权结果', icon: '✅', color: '#10b981', hint: '仅返回授权 Chunk' },
+]
+
+const integrationFlow = [
+  { node: '外部系统', icon: '🏢', color: '#3b82f6', hint: 'OA / IM / ERP / BI' },
+  { node: 'Kong 网关', icon: '🌐', color: '#06b6d4', hint: '统一入口 + 限流 + 审计' },
+  { node: '认证鉴权', icon: '🔐', color: '#0ea5e9', hint: 'JWT 或 API Key (scope 隔离)' },
+  { node: '后端服务', icon: '⚙️', color: accentColor, hint: 'FastAPI + 异步处理' },
+  { node: 'RAG 引擎', icon: '🧠', color: '#8b5cf6', hint: '检索 + 权限 + LLM 生成' },
+  { node: '结果返回', icon: '📤', color: '#10b981', hint: '带引用的 JSON 响应' },
 ]
 
 const externalAuthTabs = [
@@ -359,6 +605,116 @@ const ProductPage = () => {
               </Button>
             </Space>
           </div>
+        </div>
+      </AnimatedSection>
+
+      {/* Quick Start */}
+      <AnimatedSection delay={100}>
+        <div style={{ marginBottom: 80 }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <Text style={{ color: accentColor, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              快速入手
+            </Text>
+            <Title level={2} style={{ marginTop: 8, marginBottom: 12, color: brandColor }}>
+              5 步跑通从登录到集成
+            </Title>
+            <Paragraph style={{ color: mutedColor, fontSize: 16, maxWidth: 720, margin: '0 auto' }}>
+              从账号登录到外部系统对接，下面是完整的上手路径和系统内部的 4 条核心流程。
+            </Paragraph>
+          </div>
+
+          {/* 5-step onboarding timeline */}
+          <Card
+            style={{ borderRadius: 16, border: '1px solid #e5e7eb', marginBottom: 40 }}
+            bodyStyle={{ padding: '40px 24px 32px' }}
+          >
+            <Row gutter={[20, 28]}>
+              {quickStartSteps.map((s, idx) => (
+                <Col xs={24} md={12} lg={idx === 4 ? 24 : 8} key={idx}>
+                  <div
+                    style={{
+                      position: 'relative',
+                      padding: '24px 22px',
+                      borderRadius: 12,
+                      background: '#fff',
+                      border: '1px solid #e5e7eb',
+                      height: '100%',
+                      transition: 'all 200ms',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        marginBottom: 14,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 10,
+                          background: `linear-gradient(135deg, ${s.color} 0%, ${s.color}dd 100%)`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontSize: 22,
+                          flexShrink: 0,
+                          boxShadow: `0 4px 12px ${s.color}33`,
+                        }}
+                      >
+                        {s.icon}
+                      </div>
+                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: s.color, fontWeight: 700 }}>
+                        STEP {s.no}
+                      </div>
+                    </div>
+                    <Title level={5} style={{ margin: 0, marginBottom: 8, color: brandColor }}>
+                      {s.title}
+                    </Title>
+                    <Paragraph style={{ color: '#4b5563', marginBottom: 14, fontSize: 13, lineHeight: 1.7 }}>
+                      {s.desc}
+                    </Paragraph>
+                    <ul style={{ paddingLeft: 18, margin: 0, color: mutedColor, fontSize: 12, lineHeight: 1.9 }}>
+                      {s.detail.map((d, i) => (
+                        <li key={i}>{d}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+
+          {/* Flow Diagrams */}
+          <Row gutter={[20, 20]}>
+            <FlowDiagramCard
+              title="文档生命周期"
+              subtitle="上传文件 → 智能解析 → 向量索引"
+              steps={documentLifecycle}
+              gradient="linear-gradient(135deg, #3b82f6 0%, #10b981 100%)"
+            />
+            <FlowDiagramCard
+              title="检索与生成流程"
+              subtitle="用户提问 → 混合检索 → 带引用回答"
+              steps={retrievalFlow}
+              gradient={`linear-gradient(135deg, ${accentColor} 0%, #ef4444 100%)`}
+            />
+            <FlowDiagramCard
+              title="权限过滤流程"
+              subtitle="四级穿透 → 默认拒绝 → 最小授权"
+              steps={permissionFlow}
+              gradient="linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%)"
+            />
+            <FlowDiagramCard
+              title="外部系统集成"
+              subtitle="OA / IM / ERP → Kong 网关 → RAG 引擎"
+              steps={integrationFlow}
+              gradient="linear-gradient(135deg, #10b981 0%, #3b82f6 100%)"
+            />
+          </Row>
         </div>
       </AnimatedSection>
 
@@ -609,7 +965,7 @@ const ProductPage = () => {
             size="large"
             icon={<MessageOutlined />}
             style={{ background: accentColor, borderColor: accentColor, borderRadius: 6 }}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/knowledge-base')}
           >
             进入知识库
           </Button>

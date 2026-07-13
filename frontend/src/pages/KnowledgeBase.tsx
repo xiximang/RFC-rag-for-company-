@@ -8,9 +8,10 @@ import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
 import { downloadFile, formatFileSize, openPreview } from '@/utils/fileDownload'
+import { useTranslation } from '@/i18n'
 import { colors, radius } from '@/styles/theme'
 
-interface KnowledgeBase {
+interface KnowledgeBaseItem {
   id: string
   name: string
   description?: string
@@ -28,26 +29,27 @@ interface DocumentItem {
   created_at: string
 }
 
-const statusMap: Record<string, { label: string; color: string }> = {
-  active: { label: '可用', color: colors.success },
-  processing: { label: '处理中', color: colors.warning },
-  error: { label: '异常', color: colors.error },
-  inactive: { label: '停用', color: colors.textMuted },
-  pending: { label: '待处理', color: colors.warning },
-  indexed: { label: '已索引', color: colors.success },
-}
-
 const KnowledgeBase = () => {
-  const [data, setData] = useState<KnowledgeBase[]>([])
+  const { t } = useTranslation()
+  const [data, setData] = useState<KnowledgeBaseItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [form] = Form.useForm()
 
-  const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null)
+  const [selectedKb, setSelectedKb] = useState<KnowledgeBaseItem | null>(null)
   const [docsVisible, setDocsVisible] = useState(false)
   const [docs, setDocs] = useState<DocumentItem[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
+
+  const statusMap: Record<string, { label: string; color: string }> = {
+    active: { label: t('knowledgeBase.active'), color: colors.success },
+    processing: { label: t('knowledgeBase.processing'), color: colors.warning },
+    error: { label: t('knowledgeBase.error'), color: colors.error },
+    inactive: { label: t('knowledgeBase.inactive'), color: colors.textMuted },
+    pending: { label: t('knowledgeBase.pending'), color: colors.warning },
+    indexed: { label: t('knowledgeBase.indexed'), color: colors.success },
+  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -57,7 +59,7 @@ const KnowledgeBase = () => {
       setData(res.data)
     } catch (e) {
       setError(true)
-      message.error('加载知识库失败')
+      message.error(t('knowledgeBase.loadDocsFailed'))
     } finally {
       setLoading(false)
     }
@@ -70,16 +72,16 @@ const KnowledgeBase = () => {
   const handleCreate = async (values: { name: string; description: string }) => {
     try {
       await api.post('/v1/knowledge-bases', values)
-      message.success('创建成功')
+      message.success(t('knowledgeBase.createSuccess'))
       setModalVisible(false)
       form.resetFields()
       fetchData()
     } catch (e) {
-      message.error('创建失败')
+      message.error(t('knowledgeBase.createFailed'))
     }
   }
 
-  const openDocuments = async (kb: KnowledgeBase) => {
+  const openDocuments = async (kb: KnowledgeBaseItem) => {
     setSelectedKb(kb)
     setDocsVisible(true)
     setDocsLoading(true)
@@ -87,7 +89,7 @@ const KnowledgeBase = () => {
       const res = await api.get(`/v1/documents/${kb.id}`)
       setDocs(res.data.items || [])
     } catch (e) {
-      message.error('加载文档列表失败')
+      message.error(t('knowledgeBase.loadDocsFailed'))
       setDocs([])
     } finally {
       setDocsLoading(false)
@@ -98,7 +100,7 @@ const KnowledgeBase = () => {
     try {
       await openPreview(`/api/v1/documents/detail/${doc.id}/preview`)
     } catch (e) {
-      message.error('预览失败')
+      message.error(t('knowledgeBase.previewFailed'))
     }
   }
 
@@ -106,15 +108,15 @@ const KnowledgeBase = () => {
     try {
       await downloadFile(`/api/v1/documents/detail/${doc.id}/download`, doc.filename)
     } catch (e) {
-      message.error('下载失败')
+      message.error(t('knowledgeBase.downloadFailed'))
     }
   }
 
   const columns = [
-    { title: '名称', dataIndex: 'name', key: 'name', width: 220, ellipsis: true },
-    { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true },
+    { title: t('knowledgeBase.name'), dataIndex: 'name', key: 'name', width: 220, ellipsis: true },
+    { title: t('knowledgeBase.description'), dataIndex: 'description', key: 'description', ellipsis: true },
     {
-      title: '状态',
+      title: t('knowledgeBase.status'),
       dataIndex: 'status',
       key: 'status',
       width: 120,
@@ -124,7 +126,7 @@ const KnowledgeBase = () => {
       },
     },
     {
-      title: '创建时间',
+      title: t('knowledgeBase.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 180,
@@ -132,16 +134,16 @@ const KnowledgeBase = () => {
       render: (v: string) => new Date(v).toLocaleString(),
     },
     {
-      title: '操作',
+      title: t('common.operations'),
       key: 'action',
       width: 140,
-      render: (_: unknown, record: KnowledgeBase) => (
+      render: (_: unknown, record: KnowledgeBaseItem) => (
         <Button
           type="link"
           icon={<FileOutlined />}
           onClick={() => openDocuments(record)}
         >
-          查看文档
+          {t('knowledgeBase.viewDocs')}
         </Button>
       ),
     },
@@ -149,7 +151,7 @@ const KnowledgeBase = () => {
 
   const docColumns = [
     {
-      title: '文件名',
+      title: t('knowledgeBase.docName'),
       dataIndex: 'filename',
       key: 'filename',
       ellipsis: true,
@@ -163,7 +165,7 @@ const KnowledgeBase = () => {
       ),
     },
     {
-      title: '状态',
+      title: t('knowledgeBase.status'),
       dataIndex: 'status',
       key: 'status',
       width: 100,
@@ -173,21 +175,21 @@ const KnowledgeBase = () => {
       },
     },
     {
-      title: '大小',
+      title: t('knowledgeBase.docSize'),
       dataIndex: 'file_size',
       key: 'file_size',
       width: 100,
       render: (v: number) => formatFileSize(v),
     },
     {
-      title: '上传时间',
+      title: t('knowledgeBase.uploadTime'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 170,
       render: (v: string) => new Date(v).toLocaleString(),
     },
     {
-      title: '操作',
+      title: t('common.operations'),
       key: 'action',
       width: 160,
       render: (_: unknown, record: DocumentItem) => (
@@ -198,7 +200,7 @@ const KnowledgeBase = () => {
             icon={<EyeOutlined />}
             onClick={() => handlePreview(record)}
           >
-            查看
+            {t('common.view')}
           </Button>
           <Button
             type="link"
@@ -206,27 +208,27 @@ const KnowledgeBase = () => {
             icon={<DownloadOutlined />}
             onClick={() => handleDownload(record)}
           >
-            下载
+            {t('common.download')}
           </Button>
         </Space>
       ),
     },
   ]
 
-  if (loading && data.length === 0) return <LoadingState fullHeight tip="正在加载知识库..." />
-  if (error && data.length === 0) return <ErrorState title="加载失败" subTitle="无法获取知识库列表" onRetry={fetchData} />
+  if (loading && data.length === 0) return <LoadingState fullHeight tip={t('knowledgeBase.loading')} />
+  if (error && data.length === 0) return <ErrorState title={t('knowledgeBase.loadError')} subTitle={t('knowledgeBase.loadErrorSub')} onRetry={fetchData} />
 
   return (
-    <div>
+    <div className="responsive-page">
       <PageHeader
-        title="知识库管理"
-        subtitle="管理企业私有知识库，为检索与问答提供数据基础。"
+        title={t('knowledgeBase.title')}
+        subtitle={t('knowledgeBase.subtitle')}
       />
 
       <DataCard
         title={
           <Space>
-            <span>知识库列表</span>
+            <span>{t('knowledgeBase.listTitle')}</span>
             <Tag color={colors.accent}>{data.length}</Tag>
           </Space>
         }
@@ -237,44 +239,46 @@ const KnowledgeBase = () => {
             onClick={() => setModalVisible(true)}
             style={{ background: colors.accent, borderColor: colors.accent, borderRadius: radius.md }}
           >
-            新建知识库
+            {t('knowledgeBase.create')}
           </Button>
         }
       >
         {data.length === 0 ? (
           <EmptyState
-            description="暂无知识库"
-            subDescription="点击右上角按钮创建第一个知识库"
+            description={t('knowledgeBase.empty')}
+            subDescription={t('knowledgeBase.emptySub')}
           />
         ) : (
-          <Table
-            rowKey="id"
-            loading={loading}
-            dataSource={data}
-            columns={columns}
-            pagination={{ pageSize: 10, hideOnSinglePage: true }}
-            scroll={{ x: 'max-content' }}
-          />
+          <div className="responsive-table-scroll">
+            <Table
+              rowKey="id"
+              loading={loading}
+              dataSource={data}
+              columns={columns}
+              pagination={{ pageSize: 10, hideOnSinglePage: true }}
+              scroll={{ x: 'max-content' }}
+            />
+          </div>
         )}
       </DataCard>
 
       <Modal
-        title="新建知识库"
+        title={t('knowledgeBase.create')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => form.submit()}
         okButtonProps={{ style: { background: colors.accent, borderColor: colors.accent } }}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} className="responsive-form">
           <Form.Item
             name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入名称' }]}
+            label={t('knowledgeBase.name')}
+            rules={[{ required: true, message: t('knowledgeBase.nameRequired') }]}
           >
-            <Input placeholder="例如：产品手册知识库" />
+            <Input placeholder={t('knowledgeBase.namePlaceholder')} />
           </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={3} placeholder="简要描述知识库用途" />
+          <Form.Item name="description" label={t('knowledgeBase.description')}>
+            <Input.TextArea rows={3} placeholder={t('knowledgeBase.descPlaceholder')} />
           </Form.Item>
         </Form>
       </Modal>
@@ -283,10 +287,10 @@ const KnowledgeBase = () => {
         title={
           selectedKb ? (
             <Typography.Text ellipsis style={{ maxWidth: 400 }}>
-              「{selectedKb.name}」文档列表
+              {t('knowledgeBase.docListFor', { name: selectedKb.name })}
             </Typography.Text>
           ) : (
-            '文档列表'
+            t('knowledgeBase.docListTitle')
           )
         }
         open={docsVisible}
@@ -294,15 +298,17 @@ const KnowledgeBase = () => {
         footer={null}
         width={900}
       >
-        <Table
-          rowKey="id"
-          loading={docsLoading}
-          dataSource={docs}
-          columns={docColumns}
-          pagination={{ pageSize: 10, hideOnSinglePage: true }}
-          locale={{ emptyText: '暂无文档' }}
-          scroll={{ x: 'max-content' }}
-        />
+        <div className="responsive-table-scroll">
+          <Table
+            rowKey="id"
+            loading={docsLoading}
+            dataSource={docs}
+            columns={docColumns}
+            pagination={{ pageSize: 10, hideOnSinglePage: true }}
+            locale={{ emptyText: t('knowledgeBase.docEmpty') }}
+            scroll={{ x: 'max-content' }}
+          />
+        </div>
       </Modal>
     </div>
   )

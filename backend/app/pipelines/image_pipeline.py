@@ -1,7 +1,10 @@
+import logging
 import os
 from typing import List, Dict, Any
 from uuid import UUID
 from app.pipelines.base import BaseIngestPipeline
+
+logger = logging.getLogger(__name__)
 
 
 class ImageIngestPipeline(BaseIngestPipeline):
@@ -28,7 +31,7 @@ class ImageIngestPipeline(BaseIngestPipeline):
         exif_metadata = self._extract_exif(file_path)
 
         content_parts = [image_description]
-        if ocr_text and ocr_text != "[OCR_UNAVAILABLE]":
+        if ocr_text and ocr_text != "[OCR disabled]":
             content_parts.extend(["[OCR_TEXT]", ocr_text, "[/OCR_TEXT]"])
         content = "\n".join(content_parts)
 
@@ -47,16 +50,22 @@ class ImageIngestPipeline(BaseIngestPipeline):
         }]
 
     def _extract_ocr(self, file_path: str) -> str:
-        """使用 pytesseract 进行 OCR，未安装时返回占位提示。"""
+        """使用 pytesseract 进行 OCR；开关关闭或依赖缺失时返回占位提示。"""
+        if os.getenv("OCR_ENABLED", "true").lower() != "true":
+            logger.warning("OCR is disabled by OCR_ENABLED=false for %s", file_path)
+            return "[OCR disabled]"
+
         try:
             from PIL import Image
             import pytesseract
 
             image = Image.open(file_path)
             return pytesseract.image_to_string(image, lang="chi_sim+eng")
-        except Exception:
-            # TODO: 安装 pytesseract 与对应语言包后启用图片 OCR。
-            return "[OCR_UNAVAILABLE]"
+        except Exception as exc:
+            logger.warning(
+                "OCR dependencies missing or failed for %s: %s", file_path, exc
+            )
+            return "[OCR disabled]"
 
     def _extract_exif(self, file_path: str) -> Dict[str, Any]:
         """抽取图片 EXIF 元数据。"""

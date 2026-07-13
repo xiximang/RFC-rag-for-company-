@@ -18,7 +18,7 @@ env:
   WORKER_IMAGE: ${{ secrets.WORKER_IMAGE || 'your-dockerhub-username/rag-worker' }}
   REPO_URL: https://github.com/renvvvvv/RFC-rag-for-company-.git
   # Set to "true" to fail the pipeline when Trivy image scans find HIGH/CRITICAL CVEs.
-  IMAGE_SCAN_FAIL_ON_SEVERITY: "false"
+  IMAGE_SCAN_FAIL_ON_SEVERITY: "true"
 
 jobs:
   # =============================================================================
@@ -456,6 +456,7 @@ jobs:
           image-ref: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
           trivy-config: trivy.yaml
           format: json
+          severity: HIGH,CRITICAL
           output: trivy-backend-report.json
           exit-code: ${{ env.IMAGE_SCAN_FAIL_ON_SEVERITY == 'true' && '1' || '0' }}
         continue-on-error: ${{ env.IMAGE_SCAN_FAIL_ON_SEVERITY != 'true' }}
@@ -467,6 +468,7 @@ jobs:
           image-ref: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
           trivy-config: trivy.yaml
           format: json
+          severity: HIGH,CRITICAL
           output: trivy-frontend-report.json
           exit-code: ${{ env.IMAGE_SCAN_FAIL_ON_SEVERITY == 'true' && '1' || '0' }}
         continue-on-error: ${{ env.IMAGE_SCAN_FAIL_ON_SEVERITY != 'true' }}
@@ -478,6 +480,7 @@ jobs:
           image-ref: ${{ env.REGISTRY }}/${{ env.WORKER_IMAGE }}:latest
           trivy-config: trivy.yaml
           format: json
+          severity: HIGH,CRITICAL
           output: trivy-worker-report.json
           exit-code: ${{ env.IMAGE_SCAN_FAIL_ON_SEVERITY == 'true' && '1' || '0' }}
         continue-on-error: ${{ env.IMAGE_SCAN_FAIL_ON_SEVERITY != 'true' }}

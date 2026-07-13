@@ -36,8 +36,8 @@ class FieldPermissionCreate(BaseModel):
 class TagPermissionCreate(BaseModel):
     target_type: str = "group"
     target_id: UUID
-    allowed_tags: List[str] = []
-    denied_tags: List[str] = []
+    allowed_tags: List[UUID] = []
+    denied_tags: List[UUID] = []
 
 class PermissionGrantRequest(BaseModel):
     target_type: PermissionTargetType
@@ -57,6 +57,16 @@ class PermissionRevokeRequest(BaseModel):
     object_id: Optional[UUID] = None
     object_key: Optional[str] = None
     permission: Optional[str] = None  # if None, revoke all matching permissions
+
+class PermissionBatchGrantRequest(BaseModel):
+    items: List[PermissionGrantRequest]
+
+class PermissionBatchRevokeRequest(BaseModel):
+    items: List[PermissionRevokeRequest]
+
+class PermissionValidationResponse(BaseModel):
+    valid: bool
+    conflicts: List[Dict[str, Any]] = []
 
 class PermissionListRequest(BaseModel):
     target_type: PermissionTargetType

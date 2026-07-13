@@ -1,8 +1,11 @@
+import logging
 import os
 import re
 from typing import List, Dict, Any, Tuple
 from uuid import UUID
 from app.pipelines.base import BaseIngestPipeline
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentIngestPipeline(BaseIngestPipeline):
@@ -108,7 +111,7 @@ class DocumentIngestPipeline(BaseIngestPipeline):
                     if not text or not text.strip():
                         # OCR 回退：扫描型 PDF 页面
                         ocr_text = self._ocr_pdf_page(file_path, page_idx)
-                        if ocr_text and ocr_text != "[OCR_UNAVAILABLE]":
+                        if ocr_text and ocr_text != "[OCR disabled]":
                             texts.append(f"[OCR_PAGE {page_idx + 1}]\n{ocr_text}\n[/OCR_PAGE]")
                     else:
                         # 表格标记
@@ -132,7 +135,15 @@ class DocumentIngestPipeline(BaseIngestPipeline):
             return f"[解析失败: {str(e)}]", {}
 
     def _ocr_pdf_page(self, file_path: str, page_number: int) -> str:
-        """使用 pdf2image + pytesseract 对单页 PDF 做 OCR。"""
+        """使用 pdf2image + pytesseract 对单页 PDF 做 OCR；开关关闭或依赖缺失时返回占位提示。"""
+        if os.getenv("OCR_ENABLED", "true").lower() != "true":
+            logger.warning(
+                "PDF OCR fallback is disabled by OCR_ENABLED=false for %s page %d",
+                file_path,
+                page_number + 1,
+            )
+            return "[OCR disabled]"
+
         try:
             from pdf2image import convert_from_path
             import pytesseract
@@ -145,9 +156,14 @@ class DocumentIngestPipeline(BaseIngestPipeline):
             if images:
                 return pytesseract.image_to_string(images[0], lang="chi_sim+eng")
             return ""
-        except Exception:
-            # TODO: 安装 pdf2image 与 tesseract 后启用 PDF OCR 回退。
-            return "[OCR_UNAVAILABLE]"
+        except Exception as exc:
+            logger.warning(
+                "PDF OCR dependencies missing or failed for %s page %d: %s",
+                file_path,
+                page_number + 1,
+                exc,
+            )
+            return "[OCR disabled]"
 
     def _extract_pptx(self, file_path: str) -> Tuple[str, Dict[str, Any]]:
         """解析 PPT/PPTX 文件，支持 .ppt（旧格式）和 .pptx（新格式）"""

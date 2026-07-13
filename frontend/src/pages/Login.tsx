@@ -5,6 +5,7 @@ import { SafetyOutlined, LoginOutlined } from '@ant-design/icons'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import { getErrorMessage } from '@/utils/error'
+import { useTranslation } from '@/i18n'
 import { colors, spacing, radius, shadows, typography } from '@/styles/theme'
 
 const { Title, Paragraph } = Typography
@@ -18,6 +19,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const { setToken, setUser } = useAuthStore()
+  const { t } = useTranslation()
 
   const handleLogin = async (values: LoginForm) => {
     setLoading(true)
@@ -31,10 +33,10 @@ const Login = () => {
       const { access_token, user } = res.data
       setToken(access_token)
       setUser(user)
-      message.success('登录成功')
-      navigate('/')
+      message.success(t('login.loginSuccess'))
+      navigate('/knowledge-base')
     } catch (e: unknown) {
-      message.error(getErrorMessage(e, '登录失败'))
+      message.error(getErrorMessage(e, t('login.loginFailed')))
     } finally {
       setLoading(false)
     }
@@ -109,27 +111,27 @@ const Login = () => {
             <SafetyOutlined />
           </div>
           <Title level={3} style={{ margin: 0, marginBottom: spacing.sm, color: colors.textPrimary }}>
-            企业级私有 RAG
+            {t('login.title')}
           </Title>
           <Paragraph style={{ color: colors.textMuted, margin: 0, fontSize: typography.sizes.sm }}>
-            安全、可信、可溯源的企业知识检索平台
+            {t('login.subtitle')}
           </Paragraph>
         </div>
 
         <Form layout="vertical" onFinish={handleLogin} size="large">
           <Form.Item
             name="username"
-            label={<span style={{ color: colors.textSecondary, fontWeight: typography.weights.medium }}>用户名</span>}
-            rules={[{ required: true, message: '请输入用户名' }]}
+            label={<span style={{ color: colors.textSecondary, fontWeight: typography.weights.medium }}>{t('login.username')}</span>}
+            rules={[{ required: true, message: t('login.usernamePlaceholder') }]}
           >
-            <Input placeholder="请输入用户名" />
+            <Input placeholder={t('login.usernamePlaceholder')} />
           </Form.Item>
           <Form.Item
             name="password"
-            label={<span style={{ color: colors.textSecondary, fontWeight: typography.weights.medium }}>密码</span>}
-            rules={[{ required: true, message: '请输入密码' }]}
+            label={<span style={{ color: colors.textSecondary, fontWeight: typography.weights.medium }}>{t('login.password')}</span>}
+            rules={[{ required: true, message: t('login.passwordPlaceholder') }]}
           >
-            <Input.Password placeholder="请输入密码" />
+            <Input.Password placeholder={t('login.passwordPlaceholder')} />
           </Form.Item>
           <Form.Item style={{ marginTop: spacing.lg, marginBottom: 0 }}>
             <Button
@@ -146,7 +148,7 @@ const Login = () => {
                 fontWeight: typography.weights.semibold,
               }}
             >
-              登录系统
+              {t('login.loginButton')}
             </Button>
           </Form.Item>
         </Form>

@@ -216,7 +216,7 @@ async def external_chat(
     return ChatResponse(
         answer=result["answer"],
         intercepted=result["intercepted"],
-        sources=[],
+        sources=result.get("sources", []),
         strategy=result.get("strategy"),
         conversation_id=conversation_id,
     )
@@ -519,7 +519,7 @@ async def _require_document_access(
     """Verify access to a document through its knowledge base."""
     service = DocumentService(db)
     doc = await service.get_document(doc_id)
-    kb = await _get_kb(db, UUID(doc.kb_id))
+    kb = await _get_kb(db, doc.kb_id)
     _require_kb_access(kb, current_user)
     return doc
 

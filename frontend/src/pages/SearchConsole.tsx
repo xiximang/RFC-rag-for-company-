@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import {
   Input,
   Button,
@@ -25,6 +25,7 @@ import {
 } from '@ant-design/icons'
 import api from '@/services/api'
 import DataCard from '@/components/ui/DataCard'
+import { useTranslation } from '@/i18n'
 import { colors, radius, shadows, spacing, typography } from '@/styles/theme'
 
 const { TextArea } = Input
@@ -67,14 +68,8 @@ interface Conversation {
   updated_at: string
 }
 
-const MODALITY_OPTIONS = [
-  { label: '文档', value: 'text' },
-  { label: '表格', value: 'table' },
-  { label: '图片', value: 'image' },
-  { label: '链接', value: 'link' },
-]
-
 const SearchConsole = () => {
+  const { t } = useTranslation()
   const [kbList, setKbList] = useState<KnowledgeBase[]>([])
   const [selectedKbs, setSelectedKbs] = useState<string[]>([])
   const [modalities, setModalities] = useState<string[]>(['text', 'table', 'link'])
@@ -86,13 +81,23 @@ const SearchConsole = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatAbortRef = useRef<AbortController | null>(null)
 
+  const modalityOptions = useMemo(
+    () => [
+      { label: t('searchConsole.text'), value: 'text' },
+      { label: t('searchConsole.table'), value: 'table' },
+      { label: t('searchConsole.image'), value: 'image' },
+      { label: t('searchConsole.link'), value: 'link' },
+    ],
+    [t]
+  )
+
   useEffect(() => {
     api
       .get('/v1/knowledge-bases')
       .then((res) => setKbList(res.data))
-      .catch(() => message.error('加载知识库失败'))
+      .catch(() => message.error(t('searchConsole.loadKbFailed')))
     loadConversations()
-  }, [])
+  }, [t])
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -137,18 +142,18 @@ const SearchConsole = () => {
       }))
       setMessages(loaded)
     } catch {
-      message.error('加载历史消息失败')
+      message.error(t('searchConsole.loadHistoryFailed'))
     }
   }
 
   const createConversation = async (): Promise<Conversation | null> => {
     if (selectedKbs.length === 0) {
-      message.warning('请至少选择一个知识库')
+      message.warning(t('searchConsole.selectKbWarning'))
       return null
     }
     try {
       const res = await api.post('/v1/chat/conversations', {
-        title: query.trim() || '新会话',
+        title: query.trim() || t('searchConsole.newConversationTitle'),
         kb_ids: selectedKbs,
       })
       const conversation: Conversation = res.data
@@ -157,7 +162,7 @@ const SearchConsole = () => {
       setMessages([])
       return conversation
     } catch {
-      message.error('创建会话失败')
+      message.error(t('searchConsole.createConvFailed'))
       return null
     }
   }
@@ -178,7 +183,7 @@ const SearchConsole = () => {
         setMessages([])
       }
     } catch {
-      message.error('删除会话失败')
+      message.error(t('searchConsole.deleteConvFailed'))
     }
   }
 
@@ -191,16 +196,16 @@ const SearchConsole = () => {
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, feedback_rating: rating } : m))
       )
-      message.success('反馈已提交')
+      message.success(t('searchConsole.feedbackSuccess'))
     } catch {
-      message.error('提交反馈失败')
+      message.error(t('searchConsole.feedbackFailed'))
     }
   }
 
   const handleSend = async () => {
     if (!query.trim()) return
     if (selectedKbs.length === 0) {
-      message.warning('请至少选择一个知识库')
+      message.warning(t('searchConsole.selectKbWarning'))
       return
     }
 
@@ -256,12 +261,12 @@ const SearchConsole = () => {
         // User left the page/tab; do not show an error toast.
         setMessages((prev) => prev.filter((m) => m !== userMsg))
       } else {
-        message.error('请求失败')
+        message.error(t('searchConsole.requestFailed'))
         setMessages((prev) => [
           ...prev,
           {
             role: 'assistant',
-            content: '请求处理失败，请稍后重试。',
+            content: t('searchConsole.requestFailedReply'),
           },
         ])
       }
@@ -274,13 +279,13 @@ const SearchConsole = () => {
   }
 
   return (
-    <div style={{ display: 'flex', gap: spacing.lg, height: 'calc(100vh - 180px)', minWidth: 0, overflow: 'hidden' }}>
+    <div className="responsive-page" style={{ display: 'flex', gap: spacing.lg, height: 'calc(100vh - 180px)', minWidth: 0, overflow: 'hidden' }}>
       {/* Conversation List */}
       <DataCard
         title={
           <Space>
             <MessageOutlined style={{ color: colors.accent }} />
-            <span>会话列表</span>
+            <span>{t('searchConsole.sessionList')}</span>
           </Space>
         }
         style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', minWidth: 0 }}
@@ -296,7 +301,7 @@ const SearchConsole = () => {
             setMessages([])
           }}
         >
-          新建会话
+          {t('searchConsole.newSession')}
         </Button>
         <div style={{ flex: 1, overflowY: 'auto' }}>
           <List
@@ -316,7 +321,7 @@ const SearchConsole = () => {
                 actions={[
                   <Popconfirm
                     key="delete"
-                    title="确定删除该会话？"
+                    title={t('searchConsole.deleteConfirm')}
                     onConfirm={(e) => deleteConversation(conv.id, e as React.MouseEvent<HTMLElement>)}
                   >
                     <Button
@@ -353,7 +358,7 @@ const SearchConsole = () => {
         title={
           <Space>
             <SettingOutlined style={{ color: colors.accent }} />
-            <span>检索配置</span>
+            <span>{t('searchConsole.searchConfig')}</span>
           </Space>
         }
         style={{ width: 300, flexShrink: 0, display: 'flex', flexDirection: 'column', minWidth: 0 }}
@@ -361,11 +366,11 @@ const SearchConsole = () => {
       >
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <div>
-            <Text strong style={{ color: colors.textPrimary }}>知识库</Text>
+            <Text strong style={{ color: colors.textPrimary }}>{t('searchConsole.knowledgeBase')}</Text>
             <Select
               mode="multiple"
               style={{ width: '100%', marginTop: spacing.sm }}
-              placeholder="选择知识库"
+              placeholder={t('searchConsole.selectKb')}
               value={selectedKbs}
               onChange={setSelectedKbs}
               maxTagCount="responsive"
@@ -379,17 +384,17 @@ const SearchConsole = () => {
             </Select>
           </div>
           <div>
-            <Text strong style={{ color: colors.textPrimary }}>模态</Text>
+            <Text strong style={{ color: colors.textPrimary }}>{t('searchConsole.modality')}</Text>
             <Checkbox.Group
               style={{ marginTop: spacing.sm, display: 'block' }}
-              options={MODALITY_OPTIONS}
+              options={modalityOptions}
               value={modalities}
               onChange={(vals) => setModalities(vals as string[])}
             />
           </div>
           <div style={{ padding: spacing.md, background: colors.surfaceAlt, borderRadius: radius.md }}>
             <Text type="secondary" style={{ fontSize: typography.sizes.sm }}>
-              已选择 {selectedKbs.length} 个知识库，{modalities.length} 种模态
+              {t('searchConsole.selectedSummary', { kbCount: selectedKbs.length, modalityCount: modalities.length })}
             </Text>
           </div>
         </Space>
@@ -400,7 +405,7 @@ const SearchConsole = () => {
         title={
           <Space>
             <BookOutlined style={{ color: colors.accent }} />
-            <span>检索问答</span>
+            <span>{t('searchConsole.chatTitle')}</span>
           </Space>
         }
         style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}
@@ -427,7 +432,7 @@ const SearchConsole = () => {
                 <MessageOutlined />
               </div>
               <Text style={{ color: colors.textMuted, fontSize: typography.sizes.md }}>
-                输入问题，开始检索企业知识库
+                {t('searchConsole.placeholder')}
               </Text>
             </div>
           )}
@@ -460,7 +465,7 @@ const SearchConsole = () => {
                   </Paragraph>
                   {msg.intercepted && (
                     <Tag color="error" style={{ marginTop: spacing.sm }}>
-                      已拦截
+                      {t('searchConsole.intercepted')}
                     </Tag>
                   )}
                   {msg.strategy && (
@@ -468,13 +473,13 @@ const SearchConsole = () => {
                       color="processing"
                       style={{ marginTop: spacing.sm, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >
-                      {msg.strategy.strategy}: {msg.strategy.reason}
+                      {t(`searchConsole.modes.${msg.strategy.strategy}`)}: {msg.strategy.reason}
                     </Tag>
                   )}
                   {msg.sources && msg.sources.length > 0 && (
                     <div style={{ marginTop: spacing.md, paddingTop: spacing.sm, borderTop: `1px solid ${msg.role === 'user' ? 'rgba(255,255,255,0.2)' : colors.border}` }}>
                       <Text strong style={{ color: 'inherit', fontSize: typography.sizes.sm }}>
-                        引用来源
+                        {t('searchConsole.sources')}
                       </Text>
                       <div style={{ marginTop: spacing.xs, display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}>
                         {msg.sources.map((s, i) => (
@@ -489,7 +494,7 @@ const SearchConsole = () => {
                   )}
                   {msg.role === 'assistant' && msg.id && (
                     <div style={{ marginTop: spacing.sm, textAlign: 'right' }}>
-                      <Tooltip title="有帮助">
+                      <Tooltip title={t('searchConsole.helpful')}>
                         <Button
                           type="text"
                           size="small"
@@ -498,7 +503,7 @@ const SearchConsole = () => {
                           onClick={() => sendFeedback(msg.id!, 1)}
                         />
                       </Tooltip>
-                      <Tooltip title="没有帮助">
+                      <Tooltip title={t('searchConsole.notHelpful')}>
                         <Button
                           type="text"
                           size="small"
@@ -515,7 +520,7 @@ const SearchConsole = () => {
           />
           {loading && (
             <div style={{ textAlign: 'center', padding: spacing.lg }}>
-              <Spin tip="检索生成中..." />
+              <Spin tip={t('searchConsole.loading')} />
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -526,7 +531,7 @@ const SearchConsole = () => {
             <TextArea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="输入您的问题，Shift + Enter 换行..."
+              placeholder={t('searchConsole.inputPlaceholder')}
               autoSize={{ minRows: 2, maxRows: 6 }}
               onPressEnter={(e) => {
                 if (!e.shiftKey) {
@@ -548,7 +553,7 @@ const SearchConsole = () => {
                 borderColor: colors.accent,
               }}
             >
-              发送
+              {t('searchConsole.send')}
             </Button>
           </Space.Compact>
         </div>

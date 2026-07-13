@@ -36,7 +36,7 @@ class MilvusVectorStore(BaseVectorStore):
 
     The store maintains two collections:
 
-    * ``{prefix}_text_chunks`` for document chunks with dense (768-dim) and
+    * ``{prefix}_text_chunks`` for document chunks with dense (1024-dim) and
       sparse vectors.
     * ``{prefix}_image_frames`` for image/video keyframes with dense 512-dim
       vectors.
@@ -48,7 +48,7 @@ class MilvusVectorStore(BaseVectorStore):
 
     backend_name = "milvus"
 
-    TEXT_DIM = 768
+    TEXT_DIM = 1024
     IMAGE_DIM = 512
 
     def __init__(self, milvus_settings: Settings | None = None) -> None:
@@ -175,7 +175,7 @@ class MilvusVectorStore(BaseVectorStore):
 
             if collection_name == self.text_collection_name:
                 fields = self._build_text_fields()
-                description = "Text chunks with dense 768-dim and sparse vectors"
+                description = "Text chunks with dense 1024-dim and sparse vectors"
             elif collection_name == self.image_collection_name:
                 fields = self._build_image_fields()
                 description = "Image/video keyframe vectors (512-dim)"

@@ -28,6 +28,7 @@ import api from '@/services/api'
 import PageHeader from '@/components/ui/PageHeader'
 import DataCard from '@/components/ui/DataCard'
 import EmptyState from '@/components/ui/EmptyState'
+import { useTranslation } from '@/i18n'
 import { colors, radius, spacing, typography } from '@/styles/theme'
 
 const { Dragger } = Upload
@@ -46,30 +47,31 @@ interface DocumentItem {
   created_at: string
 }
 
-const FILE_ICONS: Record<string, React.ReactNode> = {
-  pdf: <FilePdfOutlined style={{ color: colors.error }} />,
-  excel: <FileExcelOutlined style={{ color: colors.success }} />,
-  image: <FileImageOutlined style={{ color: colors.info }} />,
-  video: <VideoCameraOutlined style={{ color: colors.warning }} />,
-  audio: <AudioOutlined style={{ color: colors.accent }} />,
-  document: <FileTextOutlined style={{ color: colors.textSecondary }} />,
-}
-
-const statusMap: Record<string, { label: string; color: string }> = {
-  indexed: { label: '已索引', color: colors.success },
-  active: { label: '可用', color: colors.success },
-  processing: { label: '处理中', color: colors.warning },
-  failed: { label: '失败', color: colors.error },
-  pending: { label: '待处理', color: colors.info },
-}
-
 const UploadCenter = () => {
+  const { t } = useTranslation()
   const [kbList, setKbList] = useState<KnowledgeBase[]>([])
   const [selectedKb, setSelectedKb] = useState<string>()
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
   const [docs, setDocs] = useState<DocumentItem[]>([])
   const [linkForm] = Form.useForm()
+
+  const FILE_ICONS: Record<string, React.ReactNode> = {
+    pdf: <FilePdfOutlined style={{ color: colors.error }} />,
+    excel: <FileExcelOutlined style={{ color: colors.success }} />,
+    image: <FileImageOutlined style={{ color: colors.info }} />,
+    video: <VideoCameraOutlined style={{ color: colors.warning }} />,
+    audio: <AudioOutlined style={{ color: colors.accent }} />,
+    document: <FileTextOutlined style={{ color: colors.textSecondary }} />,
+  }
+
+  const statusMap: Record<string, { label: string; color: string }> = {
+    indexed: { label: t('uploadCenter.indexed'), color: colors.success },
+    active: { label: t('uploadCenter.active'), color: colors.success },
+    processing: { label: t('uploadCenter.processing'), color: colors.warning },
+    failed: { label: t('uploadCenter.failed'), color: colors.error },
+    pending: { label: t('uploadCenter.pending'), color: colors.info },
+  }
 
   const fetchKBs = async () => {
     try {
@@ -79,7 +81,7 @@ const UploadCenter = () => {
         setSelectedKb(res.data[0].id)
       }
     } catch (e) {
-      message.error('加载知识库失败')
+      message.error(t('uploadCenter.loadKbsFailed'))
     }
   }
 
@@ -90,7 +92,7 @@ const UploadCenter = () => {
       const res = await api.get(`/v1/documents/${selectedKb}`)
       setDocs(res.data.items || [])
     } catch (e) {
-      message.error('加载文档失败')
+      message.error(t('uploadCenter.loadDocsFailed'))
     } finally {
       setDocsLoading(false)
     }
@@ -109,7 +111,7 @@ const UploadCenter = () => {
   const customUpload: UploadProps['customRequest'] = async (options) => {
     const { file, onSuccess, onError } = options
     if (!selectedKb) {
-      message.error('请先选择知识库')
+      message.error(t('uploadCenter.selectKbFirst'))
       onError?.(new Error('No KB selected'))
       return
     }
@@ -124,17 +126,17 @@ const UploadCenter = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       onSuccess?.('ok')
-      message.success(`${(file as File).name} 上传成功`)
+      message.success(t('uploadCenter.uploadSuccess', { name: (file as File).name }))
       fetchDocs()
     } catch (e) {
       onError?.(new Error('Upload failed'))
-      message.error(`${(file as File).name} 上传失败`)
+      message.error(t('uploadCenter.uploadFailed', { name: (file as File).name }))
     }
   }
 
   const handleLinkSubmit = async (values: { url: string; tags?: string }) => {
     if (!selectedKb) {
-      message.error('请先选择知识库')
+      message.error(t('uploadCenter.selectKbFirst'))
       return
     }
     try {
@@ -148,17 +150,17 @@ const UploadCenter = () => {
           params: new URLSearchParams({ kb_id: selectedKb }),
         }
       )
-      message.success('链接提交成功')
+      message.success(t('uploadCenter.linkSubmitSuccess'))
       linkForm.resetFields()
       fetchDocs()
     } catch (e) {
-      message.error('链接提交失败')
+      message.error(t('uploadCenter.linkSubmitFailed'))
     }
   }
 
   const docColumns = [
     {
-      title: '文件名 / URL',
+      title: t('uploadCenter.filename'),
       dataIndex: 'filename',
       key: 'filename',
       ellipsis: true,
@@ -172,9 +174,9 @@ const UploadCenter = () => {
         </Space>
       ),
     },
-    { title: '类型', dataIndex: 'file_type', key: 'file_type', width: 100 },
+    { title: t('uploadCenter.fileType'), dataIndex: 'file_type', key: 'file_type', width: 100 },
     {
-      title: '状态',
+      title: t('uploadCenter.status'),
       dataIndex: 'status',
       key: 'status',
       width: 120,
@@ -184,7 +186,7 @@ const UploadCenter = () => {
       },
     },
     {
-      title: '创建时间',
+      title: t('uploadCenter.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 180,
@@ -198,7 +200,7 @@ const UploadCenter = () => {
       label: (
         <Space>
           <CloudUploadOutlined />
-          <span>文件上传</span>
+          <span>{t('uploadCenter.fileUpload')}</span>
         </Space>
       ),
       children: (
@@ -220,10 +222,10 @@ const UploadCenter = () => {
             <InboxOutlined />
           </p>
           <p style={{ fontSize: typography.sizes.md, color: colors.textPrimary, marginBottom: spacing.sm }}>
-            点击或拖拽文件到此区域上传
+            {t('uploadCenter.dragText')}
           </p>
           <p style={{ color: colors.textMuted, fontSize: typography.sizes.sm }}>
-            支持 PDF / Word / Excel / 图片 / 视频 / 音频 / 文本 / Markdown
+            {t('uploadCenter.supportedTypes')}
           </p>
         </Dragger>
       ),
@@ -233,20 +235,20 @@ const UploadCenter = () => {
       label: (
         <Space>
           <LinkOutlined />
-          <span>链接上传</span>
+          <span>{t('uploadCenter.linkUpload')}</span>
         </Space>
       ),
       children: (
-        <Form form={linkForm} layout="vertical" onFinish={handleLinkSubmit}>
+        <Form form={linkForm} layout="vertical" onFinish={handleLinkSubmit} className="responsive-form">
           <Form.Item
             name="url"
-            label="网页链接"
-            rules={[{ required: true, type: 'url', message: '请输入有效URL' }]}
+            label={t('uploadCenter.linkUrl')}
+            rules={[{ required: true, type: 'url', message: t('uploadCenter.urlRequired') }]}
           >
-            <Input prefix={<LinkOutlined />} placeholder="https://..." />
+            <Input prefix={<LinkOutlined />} placeholder={t('uploadCenter.urlPlaceholder')} />
           </Form.Item>
-          <Form.Item name="tags" label="标签（逗号分隔）">
-            <Input placeholder="标签1,标签2" />
+          <Form.Item name="tags" label={t('uploadCenter.tags')}>
+            <Input placeholder={t('uploadCenter.tagsPlaceholder')} />
           </Form.Item>
           <Form.Item>
             <Button
@@ -254,7 +256,7 @@ const UploadCenter = () => {
               htmlType="submit"
               style={{ background: colors.accent, borderColor: colors.accent, borderRadius: radius.md }}
             >
-              提交链接
+              {t('uploadCenter.submitLink')}
             </Button>
           </Form.Item>
         </Form>
@@ -263,22 +265,22 @@ const UploadCenter = () => {
   ]
 
   return (
-    <div>
+    <div className="responsive-page">
       <PageHeader
-        title="上传中心"
-        subtitle="将文件或网页链接上传到指定知识库，支持多模态内容解析与索引。"
+        title={t('uploadCenter.title')}
+        subtitle={t('uploadCenter.subtitle')}
       />
 
       <DataCard
-        title="上传文档"
+        title={t('uploadCenter.fileUpload')}
         extra={
           <Space>
-            <span style={{ color: colors.textSecondary, fontSize: typography.sizes.sm }}>目标知识库</span>
+            <span style={{ color: colors.textSecondary, fontSize: typography.sizes.sm }}>{t('uploadCenter.targetKb')}</span>
             <Select
               style={{ width: 240, maxWidth: '50vw' }}
               value={selectedKb}
               onChange={setSelectedKb}
-              placeholder="请选择知识库"
+              placeholder={t('uploadCenter.selectKb')}
             >
               {kbList.map((kb) => (
                 <Option key={kb.id} value={kb.id}>
@@ -296,25 +298,27 @@ const UploadCenter = () => {
       <DataCard
         title={
           <Space>
-            <span>文档列表</span>
+            <span>{t('uploadCenter.docList')}</span>
             <Tag color={colors.accent}>{docs.length}</Tag>
           </Space>
         }
       >
         {docs.length === 0 && !docsLoading ? (
           <EmptyState
-            description="暂无文档"
-            subDescription="上传文件或提交链接后，文档将显示在这里"
+            description={t('uploadCenter.empty')}
+            subDescription={t('uploadCenter.emptySub')}
           />
         ) : (
-          <Table
-            rowKey="id"
-            dataSource={docs}
-            columns={docColumns}
-            loading={docsLoading}
-            pagination={{ pageSize: 10, hideOnSinglePage: true }}
-            scroll={{ x: 'max-content' }}
-          />
+          <div className="responsive-table-scroll">
+            <Table
+              rowKey="id"
+              dataSource={docs}
+              columns={docColumns}
+              loading={docsLoading}
+              pagination={{ pageSize: 10, hideOnSinglePage: true }}
+              scroll={{ x: 'max-content' }}
+            />
+          </div>
         )}
       </DataCard>
     </div>

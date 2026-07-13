@@ -7,7 +7,9 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.auth import get_current_user
+from app.core.exceptions import PermissionDeniedException
 from app.database import get_db
+from app.models.knowledge_base import KnowledgeBase
 from app.models.search_history import SearchHistory
 from app.schemas.search import (
     SearchHistoryResponse,
@@ -19,6 +21,26 @@ from app.schemas.user import UserResponse
 from app.services.retrieval_service import retrieval_service
 
 router = APIRouter(prefix="/search", tags=["search"])
+
+
+async def _check_kb_ids_access(
+    db: AsyncSession,
+    current_user: UserResponse,
+    kb_ids: List[UUID],
+) -> None:
+    """P0-1 修复: 校验用户对所有 kb_ids 拥有访问权限（与 chat.py 同步）。"""
+    from app.api.v1.auth import is_admin
+
+    if is_admin(current_user):
+        return
+    if not kb_ids:
+        return
+    for kb_id in kb_ids:
+        kb = await db.get(KnowledgeBase, kb_id)
+        if kb is None:
+            raise PermissionDeniedException(f"知识库 {kb_id} 不存在或无权访问")
+        if kb.owner_id and str(kb.owner_id) != str(current_user.id):
+            raise PermissionDeniedException("没有权限访问该知识库")
 
 
 async def _persist_search_history(
@@ -88,6 +110,7 @@ async def search(
     current_user: UserResponse = Depends(get_current_user),
 ):
     """混合检索（向量 + BM25 + RRF + Cross-Encoder）。"""
+    await _check_kb_ids_access(db, current_user, list(request.kb_ids or []))
     results = await retrieval_service.search(
         db=db,
         user_id=current_user.id,
@@ -109,6 +132,7 @@ async def semantic_search(
     current_user: UserResponse = Depends(get_current_user),
 ):
     """纯向量检索。"""
+    await _check_kb_ids_access(db, current_user, list(request.kb_ids or []))
     results = await retrieval_service.semantic_search(
         db=db,
         user_id=current_user.id,
@@ -129,6 +153,7 @@ async def keyword_search(
     current_user: UserResponse = Depends(get_current_user),
 ):
     """纯 BM25 关键词检索。"""
+    await _check_kb_ids_access(db, current_user, list(request.kb_ids or []))
     results = await retrieval_service.keyword_search(
         db=db,
         user_id=current_user.id,

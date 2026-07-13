@@ -1,20 +1,32 @@
 from typing import List, Optional
 from urllib.parse import quote
 from uuid import UUID
-from fastapi import APIRouter, Depends, UploadFile, File, Form, status, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, status, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.auth import get_current_user
+from app.config import settings
 from app.core.exceptions import NotFoundException, PermissionDeniedException, ValidationException
 from app.database import get_db
 from app.models.knowledge_base import KnowledgeBase
 from app.schemas.document import DocumentResponse, DocumentListResponse, DocumentLinkCreate
 from app.schemas.user import UserResponse
 from app.services.document_service import DocumentService
-from app.workers.ingest_tasks import process_document
+from app.workers.ingest_tasks import process_document, _process_document_async_safe
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+
+def _dispatch_ingest(doc_id: str, background: BackgroundTasks) -> None:
+    """Schedule a document ingest without blocking the request.
+
+    Lightweight mode uses EAGER Celery, which under FastAPI must run as a
+    background task on the existing event loop. We use FastAPI's
+    BackgroundTasks so the coroutine is scheduled after the response is sent
+    but the connection to the client stays available.
+    """
+    background.add_task(_process_document_async_safe, doc_id)
 
 
 async def _get_kb(db: AsyncSession, kb_id: UUID) -> KnowledgeBase:
@@ -53,6 +65,7 @@ async def _require_document_access(
 
 @router.post("", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
+    background: BackgroundTasks,
     kb_id: UUID = Form(...),
     file: UploadFile = File(...),
     tags: Optional[str] = Form(None),
@@ -62,7 +75,9 @@ async def upload_document(
     """上传文档到指定知识库"""
     file_bytes = await file.read()
     metadata = {"tags": tags.split(",") if tags else []}
-    
+
+    await _require_kb_access(db, current_user, kb_id)
+
     service = DocumentService(db)
     doc = await service.upload_document(
         kb_id=kb_id,
@@ -72,26 +87,29 @@ async def upload_document(
         created_by=current_user.id,
         metadata=metadata
     )
-    
-    # 异步触发摄取任务
-    process_document.delay(str(doc.id))
+
+    # 异步触发摄取任务（不阻塞 HTTP 响应）
+    _dispatch_ingest(str(doc.id), background)
     return doc
 
 @router.post("/link", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def create_link_document(
+    background: BackgroundTasks,
     kb_id: UUID,
     link_data: DocumentLinkCreate,
     db: AsyncSession = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user)
 ):
     """创建链接文档"""
+    await _require_kb_access(db, current_user, kb_id)
+
     service = DocumentService(db)
     doc = await service.create_link_document(
         kb_id=kb_id,
         link_data=link_data,
         created_by=current_user.id
     )
-    process_document.delay(str(doc.id))
+    _dispatch_ingest(str(doc.id), background)
     return doc
 
 @router.get("/{kb_id}", response_model=DocumentListResponse)
@@ -196,17 +214,18 @@ async def delete_document(
 
 @router.post("/{doc_id}/reprocess", response_model=DocumentResponse)
 async def reprocess_document(
+    background: BackgroundTasks,
     doc_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user)
 ):
-    """重新运行文档摄取流水线"""
-    service = DocumentService(db)
-    doc = await service.get_document(doc_id)
+    """重新运行文档摄取流水线。P0-3 修复：先校验 KB 所有权。"""
+    doc = await _require_document_access(db, current_user, doc_id)
 
     if doc.status == "processing":
         raise ValidationException("文档正在处理中，请稍后再试")
 
+    service = DocumentService(db)
     await service.clear_document_index(doc_id)
 
     await service.update_status(
@@ -214,5 +233,5 @@ async def reprocess_document(
         status="pending",
         processing_info={"reprocess_requested_by": str(current_user.id)},
     )
-    process_document.delay(str(doc_id))
+    _dispatch_ingest(str(doc_id), background)
     return doc

@@ -93,3 +93,11 @@ k8s/helm/rag-system/secrets.yaml
 k8s/helm/rag-system/secrets-*.yaml
 k8s/helm/rag-system/*.tgz
 k8s/helm/rag-system/helm.exe
+
+# Downloaded design assets
+*.zip
+
+# UPS5000-E 根目录的测试 PDF 和临时文档（不纳入版本控制）
+/UPS5000-E-*.pdf
+/UPS5000-E_RAG*.md
+/rag_comparison.html

@@ -15,7 +15,7 @@ from app.core.exceptions import AuthenticationException, AuthorizationException
 from app.database import get_db
 from app.schemas.api_key import ApiKeyCreate, ApiKeyCreateResponse, ApiKeyResponse
 from app.schemas.user import UserResponse
-from app.services.api_key_service import ApiKeyService
+from app.services.api_key_service import ALL_SCOPES, ApiKeyService
 
 router = APIRouter(prefix="/api-keys", tags=["API Keys"])
 
@@ -71,3 +71,15 @@ async def revoke_api_key(
     if not revoked:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
     return None
+
+
+@router.get("/scopes")
+async def list_available_scopes(
+    current_user: UserResponse = Depends(get_current_user),
+):
+    """Return the scopes the current user may assign to an API key."""
+    allowed = ApiKeyService.scopes_for_level(current_user.security_level)
+    return {
+        "allowed_scopes": allowed,
+        "all_scopes": sorted(ALL_SCOPES),
+    }

@@ -98,14 +98,30 @@ class _ChunkWrapper:
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def embed_chunks(self, chunk_ids: List[str]) -> Dict[str, Any]:
-    """Embed a batch of chunks and persist them to vector/fulltext stores."""
+    """Embed a batch of chunks and persist them to vector/fulltext stores.
+
+    In lightweight EAGER mode we must not block the FastAPI event loop;
+    dispatch as a fire-and-forget task instead.
+    """
     logger.info("Embedding %s chunks (retry=%s)", len(chunk_ids), self.request.retries)
     try:
-        result = asyncio.run(_embed_chunks_async(chunk_ids))
-        return result
-    except Exception as exc:
-        logger.exception("Embedding failed for chunk_ids=%s", chunk_ids)
-        raise self.retry(exc=exc) from exc
+        running_loop = asyncio.get_event_loop()
+        if running_loop.is_running():
+            asyncio.ensure_future(_embed_chunks_async_safe(chunk_ids))
+            return {"scheduled": True, "chunk_count": len(chunk_ids)}
+        else:
+            return asyncio.run(_embed_chunks_async(chunk_ids))
+    except RuntimeError:
+        return asyncio.run(_embed_chunks_async(chunk_ids))
+
+
+async def _embed_chunks_async_safe(chunk_ids: List[str]) -> Dict[str, Any]:
+    """Fire-and-forget wrapper for EAGER mode."""
+    try:
+        return await _embed_chunks_async(chunk_ids)
+    except Exception:
+        logger.exception("Background embed failed for chunk_ids=%s", chunk_ids)
+        return {}
 
 
 async def _embed_chunks_async(chunk_ids: List[str]) -> Dict[str, Any]:

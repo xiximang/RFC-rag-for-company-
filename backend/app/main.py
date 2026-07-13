@@ -23,6 +23,7 @@ from app.api.v1 import auth, health
 
 # Placeholder routers for upcoming modules
 from app.api.v1 import (
+    agentic_rag,
     api_keys,
     chat,
     collaboration,
@@ -31,8 +32,11 @@ from app.api.v1 import (
     eval,
     external,
     groups,
+    im_integration,
     keywords,
     knowledge_bases,
+    knowledge_graph,
+    operations,
     permissions,
     search,
     users,
@@ -182,6 +186,10 @@ app.include_router(eval.router, prefix="/api/v1")
 app.include_router(collaboration.router, prefix="/api/v1")
 app.include_router(api_keys.router, prefix="/api/v1")
 app.include_router(external.router, prefix="/api/v1")
+app.include_router(knowledge_graph.router, prefix="/api/v1")
+app.include_router(im_integration.router, prefix="/api/v1")
+app.include_router(agentic_rag.router, prefix="/api/v1")
+app.include_router(operations.router, prefix="/api/v1")
 
 
 @app.exception_handler(RAGBaseException)

@@ -6,6 +6,7 @@ WORKDIR /app
 # - gcc: compile Python packages with C extensions
 # - tesseract-ocr (+ language packs): OCR for scanned PDFs / images
 # - poppler-utils: pdfinfo / pdftotext for PDF metadata extraction
+# - ffmpeg / libsndfile1: audio decoding for transcription
 # - libreoffice: convert legacy Office formats (doc/xls/ppt) to text
 RUN sed -i 's|http://deb.debian.org|https://mirrors.ustc.edu.cn|g' /etc/apt/sources.list.d/debian.sources \
     && apt-get update \
@@ -16,6 +17,8 @@ RUN sed -i 's|http://deb.debian.org|https://mirrors.ustc.edu.cn|g' /etc/apt/sour
         tesseract-ocr-chi-sim \
         tesseract-ocr-eng \
         poppler-utils \
+        ffmpeg \
+        libsndfile1 \
         libreoffice-writer \
         libreoffice-calc \
         libreoffice-impress \

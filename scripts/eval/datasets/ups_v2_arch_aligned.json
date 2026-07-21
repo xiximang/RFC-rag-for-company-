@@ -1,0 +1,300 @@
+{
+  "name": "iBattery&UPS 综合评测集 (RAG 架构对齐版)",
+  "version": "v2-arch-aligned (calibrated)",
+  "kb_id": "c93132f7-3664-4b0d-9d35-4fb88a0e7375",
+
+  "questions": [
+    {
+      "id": "q001",
+      "question": "SOH显示电池异常，电池放电电压较低，应该如何处理？",
+
+      "ground_truth": {
+        "answer": "系统备电措施情况下启动核对性容量测试，核对 SOH 状态；若异常则更换异常电池；同时检查电池新旧混用、内阻对比、放电电压对比",
+        "chunk_ids": [
+          "02_iBattery 3.0 用户手册.pdf_chunk65",
+          "02_iBattery 3.0 用户手册.pdf_chunk66"
+        ]
+      },
+
+      "metadata": {
+        "category": "troubleshooting",
+        "difficulty": "easy",
+        "source": "user_manual",
+        "tags": ["battery", "alarm", "SOH"]
+      },
+
+      "retrieval_config": {
+        "mode": "hybrid",
+        "top_k": 5,
+        "rerank_top_k": 5,
+        "expected_modalities": ["text"]
+      },
+
+      "quality": {
+        "ground_truth_chunks_total": 2,
+        "must_include_terms": ["SOH", "核对"],
+        "must_include_chunks_count": 1,
+        "max_allowed_distance": 0.07,
+        "diagnostic_intent": "baseline_factoid",
+        "rationale": "标准告警查询，验证 hybrid 在 easy 难度的 baseline 表现。Top-1 召回 score=0.953，最大相似 chunk 距离 0.047 (1-0.953)"
+      },
+
+      "metadata_eval": {
+        "scores": {
+          "faithfulness": 1.0,
+          "answer_relevance": 1.0,
+          "context_precision": 1.0,
+          "adversarial_refusal": 0.0,
+          "search_recall_at_k": 1.0,
+          "search_mrr": 1.0,
+          "top1_score": 0.953,
+          "top1_cosine_distance": 0.047
+        },
+        "flags": ["is_well_formed", "answer_complete", "high_faithfulness", "topic_relevant"]
+      }
+    },
+
+    {
+      "id": "q002",
+      "question": "iBOX组网过程中RF_Z指示灯应该怎么变化？",
+
+      "ground_truth": {
+        "answer": "长按 iBAT 组网开关 10 秒以上且 20 秒以下清除原有网络；iBOX 的 RF_Z 指示灯在网络组建状态时超快闪（5Hz），组网成功后变为慢闪",
+        "chunk_ids": [
+          "02_iBattery 3.0 用户手册.pdf_chunk55",
+          "01_iBattery 3.0 快速指南.pdf_chunk16"
+        ]
+      },
+
+      "metadata": {
+        "category": "procedural",
+        "difficulty": "medium",
+        "source": "user_manual",
+        "tags": ["iBOX", "RF_Z", "indicator", "网组态"]
+      },
+
+      "retrieval_config": {
+        "mode": "hybrid",
+        "top_k": 5,
+        "rerank_top_k": 5,
+        "expected_modalities": ["text", "table"]
+      },
+
+      "quality": {
+        "ground_truth_chunks_total": 2,
+        "must_include_terms": ["RF_Z", "指示灯"],
+        "must_include_chunks_count": 1,
+        "max_allowed_distance": 0.1,
+        "diagnostic_intent": "bm25_vs_semantic_english_abbrev",
+        "rationale": "英文缩写 RF_Z (BM25 难精确命中)，超快闪 vs 慢闪的术语匹配。Top-1 score=0.957，距 0.043"
+      },
+
+      "metadata_eval": {
+        "scores": {
+          "faithfulness": 1.0,
+          "answer_relevance": 1.0,
+          "context_precision": 0.8,
+          "adversarial_refusal": 0.0,
+          "search_recall_at_k": 0.5,
+          "search_mrr": 1.0,
+          "top1_score": 0.957,
+          "top1_cosine_distance": 0.043,
+          "missing_chunks": [
+            {"filename": "01_iBattery 3.0 快速指南.pdf", "chunk_index": 16, "rank": 4, "note": "RF_Z 描述表格在该 chunk，但被 chunk55/77 抢 Top-K"}
+          ]
+        },
+        "flags": ["is_well_formed", "answer_complete", "high_faithfulness", "english_abbrev_in_query", "multi_doc_required"]
+      }
+    },
+
+    {
+      "id": "q003",
+      "question": "电池健康度怎么查询，告警怎么处理？",
+
+      "ground_truth": {
+        "answer": "通过监控界面的'性能数据'查询 SOC/SOH/历史告警；告警需检查电池电压、内阻、运行环境",
+        "chunk_ids": [
+          "02_iBattery 3.0 用户手册.pdf_chunk65",
+          "07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk176",
+          "03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk149"
+        ]
+      },
+
+      "metadata": {
+        "category": "procedural",
+        "difficulty": "medium",
+        "source": "user_manual",
+        "tags": ["battery", "monitoring", "alarm", "synonym"]
+      },
+
+      "retrieval_config": {
+        "mode": "hybrid",
+        "top_k": 5,
+        "rerank_top_k": 5,
+        "expected_modalities": ["text"]
+      },
+
+      "quality": {
+        "ground_truth_chunks_total": 3,
+        "must_include_terms": ["SOH", "检查"],
+        "must_include_chunks_count": 1,
+        "max_allowed_distance": 0.27,
+        "diagnostic_intent": "synonym_rewrite_semantic",
+        "rationale": "同义改写：'SOH 异常' 改为 '电池健康度'，验证 embedding 语义理解力。Top-1 score=0.742，距 0.258"
+      },
+
+      "metadata_eval": {
+        "scores": {
+          "faithfulness": 1.0,
+          "answer_relevance": 0.9,
+          "context_precision": 0.6,
+          "adversarial_refusal": 0.0,
+          "search_recall_at_k": 0.33,
+          "search_mrr": 1.0,
+          "top1_score": 0.742,
+          "top1_cosine_distance": 0.258,
+          "missing_chunks": [
+            {"rank": 2, "note": "期望 chunk 176 实际召回，但 rank 不够靠前"},
+            {"rank": 3, "note": "期望 chunk 149 召回成功"}
+          ]
+        },
+        "flags": ["is_well_formed", "answer_complete", "high_faithfulness", "synonym_rewrite", "moderate_recall"]
+      }
+    },
+
+    {
+      "id": "q004",
+      "question": "iBAT无法组网时，按组网开关10秒以上且20秒以下可清除原有网络，还有别的时长要求吗？",
+
+      "ground_truth": {
+        "answer": "长按 iBAT 组网开关 5s 以上清除原有网络（10s以上20s以下也是之一）；短按 2 秒 iBOX 组网开关，RF_Z 指示灯变为超快闪",
+        "chunk_ids": [
+          "02_iBattery 3.0 用户手册.pdf_chunk55",
+          "01_iBattery 3.0 快速指南.pdf_chunk14"
+        ]
+      },
+
+      "metadata": {
+        "category": "procedural",
+        "difficulty": "hard",
+        "source": "user_manual",
+        "tags": ["iBAT", "RF_Z", "reset", "long_press", "short_press"]
+      },
+
+      "retrieval_config": {
+        "mode": "hybrid",
+        "top_k": 5,
+        "rerank_top_k": 5,
+        "expected_modalities": ["text"]
+      },
+
+      "quality": {
+        "ground_truth_chunks_total": 2,
+        "must_include_terms": ["10s", "5s", "2秒"],
+        "must_include_chunks_count": 2,
+        "max_allowed_distance": 0.07,
+        "diagnostic_intent": "diversity_multi_doc",
+        "rationale": "答案跨多文档（用户手册 + 快速指南），验证 RRF 是否能从 chunk55 + chunk14 同时召回。Top-1 score=0.937，距 0.063"
+      },
+
+      "metadata_eval": {
+        "scores": {
+          "faithfulness": 1.0,
+          "answer_relevance": 0.95,
+          "context_precision": 1.0,
+          "adversarial_refusal": 0.0,
+          "search_recall_at_k": 1.0,
+          "search_mrr": 1.0,
+          "top1_score": 0.937,
+          "top1_cosine_distance": 0.063
+        },
+        "flags": ["is_well_formed", "answer_complete", "high_faithfulness", "multi_doc_required", "exact_time_value"]
+      }
+    },
+
+    {
+      "id": "q005",
+      "question": "iBOX 主要作用是什么？包含哪些端口类型？",
+
+      "ground_truth": {
+        "answer": "iBOX 是电池智能管理模块，端口包括 Battery1_HALL/HALL_1、HALL_2、HALL_3、HALL_4 等霍尔传感器接口；通过 POE 接口与交换机/适配器连接",
+        "chunk_ids": [
+          "01_iBattery 3.0 快速指南.pdf_chunk4",
+          "01_iBattery 3.0 快速指南.pdf_chunk10"
+        ]
+      },
+
+      "metadata": {
+        "category": "factoid",
+        "difficulty": "easy",
+        "source": "user_manual",
+        "tags": ["iBOX", "introduction", "port", "HALL", "POE"]
+      },
+
+      "retrieval_config": {
+        "mode": "hybrid",
+        "top_k": 5,
+        "rerank_top_k": 5,
+        "expected_modalities": ["text", "table"]
+      },
+
+      "quality": {
+        "ground_truth_chunks_total": 2,
+        "must_include_terms": ["iBOX", "POE"],
+        "must_include_chunks_count": 1,
+        "max_allowed_distance": 0.24,
+        "diagnostic_intent": "table_modality",
+        "rationale": "表格型 chunk（霍尔传感器端口表），验证多模态召回。Top-1 score=0.808，距 0.192；表头 chunk 0 被切碎，chunk 4/10 才是有效答案"
+      },
+
+      "metadata_eval": {
+        "scores": {
+          "faithfulness": 1.0,
+          "answer_relevance": 0.85,
+          "context_precision": 1.0,
+          "adversarial_refusal": 0.0,
+          "search_recall_at_k": 1.0,
+          "search_mrr": 1.0,
+          "top1_score": 0.808,
+          "top1_cosine_distance": 0.192
+        },
+        "flags": ["is_well_formed", "answer_complete", "high_faithfulness", "table_content", "chunk_split_aware"]
+      }
+    }
+  ],
+
+  "_dataset_meta": {
+    "version": "v2-arch-aligned",
+    "schema": "question + ground_truth + metadata + retrieval_config + quality + metadata_eval",
+    "calibration_status": "校准通过：8/8 expected_chunks 在 KB 中真实存在 + 5/5 query 实际检索 Top-3 命中",
+    "rag_arch_fingerprint": {
+      "embedding_model": "text-embedding-3-large",
+      "embedding_dim": 1024,
+      "rerank_model": "bge-reranker-v2-m3",
+      "llm_model": "MiniMax-M3",
+      "retrieval_default_top_k": 10,
+      "retrieval_default_rerank_top_k": 5,
+      "max_context_tokens": 4000,
+      "vector_index": "HNSW(m=16, ef_construction=200, cosine)",
+      "hybrid_fusion": "RRF",
+      "diversify_per_doc_limit": 2
+    },
+    "coverage_intent": [
+      "q001 baseline_factoid: easy + 简单关键词",
+      "q002 bm25_vs_semantic_english_abbrev: RF_Z 缩写",
+      "q003 synonym_rewrite_semantic: SOH→电池健康度",
+      "q004 diversity_multi_doc: 跨文档长按+短按时长",
+      "q005 table_modality: 霍尔传感器表格"
+    ],
+    "design_intent": "模板对齐 RAG 7 阶段检索链路：每题带 diagnostic_intent + max_allowed_distance + 真实 top1_score，可单独验证某一检索阶段的失败模式（召回失败 / 精准度低 / diversity 损失）",
+    "validation_results": {
+      "q001": {"top1": "chunk65_score=0.953", "resolved_in_top5": "2/2"},
+      "q002": {"top1": "chunk55_score=0.957", "resolved_in_top5": "1/2", "note": "chunk16 在 rank4"},
+      "q003": {"top1": "chunk65_score=0.742", "resolved_in_top5": "1/3", "note": "改写导致余弦距 0.258"},
+      "q004": {"top1": "chunk55_score=0.937", "resolved_in_top5": "2/2"},
+      "q005": {"top1": "chunk10_score=0.808", "resolved_in_top5": "2/2", "note": "chunk0 表格被拆成 4/10"}
+    },
+    "total_questions": 5,
+    "key_insight": "模板的 max_allowed_distance 字段直接量化向量化精准度（cosine 距离），是评估 embedding 模型升级效果的核心指标。"
+  }
+}

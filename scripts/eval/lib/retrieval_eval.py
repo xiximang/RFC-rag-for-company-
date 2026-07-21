@@ -120,9 +120,18 @@ def run_retrieval_eval(
     per_mode_records: dict[str, list[dict]] = {m: [] for m in modes}
 
     for q in queries:
-        qid = q.get("query_id", "")
-        query_text = q.get("query", "")
-        expected = _expected_set(q.get("expected_chunks", []))
+        # v2 兼容：id 字段、question 字段
+        qid = q.get("query_id") or q.get("id") or ""
+        query_text = q.get("query") or q.get("question") or ""
+        # v2 兼容：expected_chunks 在 ground_truth.chunk_ids
+        expected_raw = q.get("expected_chunks")
+        if expected_raw is None:
+            gt = q.get("ground_truth") or {}
+            expected_raw = gt.get("chunk_ids") or gt.get("chunks") or []
+        expected = _expected_set(expected_raw)
+
+        # v2: per-query retrieval_config 覆盖（mode / top_k / rerank_top_k）
+        cfg = q.get("retrieval_config") or {}
 
         record = {
             "query_id": qid,
@@ -131,14 +140,39 @@ def run_retrieval_eval(
             "modes": {},
         }
 
+        # v2 元数据透传
+        meta = q.get("metadata") or {}
+        if meta.get("category"):
+            record["category"] = meta["category"]
+        if meta.get("difficulty"):
+            record["difficulty"] = meta["difficulty"]
+        if meta.get("tags"):
+            record["tags"] = meta["tags"]
+        if (q.get("quality") or {}).get("diagnostic_intent"):
+            record["diagnostic_intent"] = q["quality"]["diagnostic_intent"]
+            record["rationale"] = (q.get("quality") or {}).get("rationale")
+        if (q.get("quality") or {}).get("max_allowed_distance") is not None:
+            record["max_allowed_distance"] = q["quality"]["max_allowed_distance"]
+
         any_error = False
-        for mode in modes:
+        # 默认用 v2 提供的 mode，否则跑全集
+        query_modes = [cfg.get("mode")] if cfg.get("mode") else modes
+        query_top_k = cfg.get("top_k") or top_k
+
+        for mode in query_modes:
             try:
-                retrieved = _search(query_text, mode, kb_ids, top_k, headers, base_url)
+                retrieved = _search(query_text, mode, kb_ids, query_top_k, headers, base_url)
+                # 记录 Top-1 cosine 距离（如果可以从 score 推算：score=1-distance）
+                top1_distance = None
+                for r_meta, r_chunk in [(i, retrieved[i]) for i in range(min(1, len(retrieved)))]:
+                    pass
+                # 我们暂时无法从 search 响应直接拿到 distance，需要后端 /search 返回 1 - score
+                # 但 search 返回的是 rerank_score（cosine 相似度），所以 1 - score ≈ distance
+                # 这里先由 run_eval.py 提供 top1_distance（如有 _search_extended 接口）
             except Exception as exc:
                 any_error = True
                 record["modes"][mode] = {"error": str(exc)}
-                per_mode_records[mode].append({"query_id": qid, "error": str(exc)})
+                per_mode_records.setdefault(mode, []).append({"query_id": qid, "error": str(exc)})
                 continue
 
             metrics = {
@@ -151,7 +185,7 @@ def run_retrieval_eval(
                 "hit_count": len(set(retrieved) & expected),
             }
             record["modes"][mode] = metrics
-            per_mode_records[mode].append({
+            per_mode_records.setdefault(mode, []).append({
                 "query_id": qid,
                 "expected": sorted(expected),
                 "retrieved": retrieved[:30],
@@ -159,12 +193,18 @@ def run_retrieval_eval(
             })
 
         per_query.append(record)
-        if any_error and all("error" in record["modes"].get(m, {}) for m in modes):
-            failed.append({"query_id": qid, "query": query_text, "reason": "all modes failed"})
+        if any_error and all("error" in record["modes"].get(m, {}) for m in query_modes):
+            failed.append({
+                "query_id": qid,
+                "query": query_text,
+                "reason": "all modes failed",
+                "diagnostic_intent": record.get("diagnostic_intent"),
+            })
 
-    # 汇总
+    # 汇总（用所有出现过的 mode 一起聚合）
+    all_modes = set(per_mode_records.keys())
     aggregate: dict = {"per_mode": {}}
-    for mode in modes:
+    for mode in all_modes:
         records = per_mode_records[mode]
         if not records:
             aggregate["per_mode"][mode] = {"error": "no successful queries"}
@@ -191,5 +231,21 @@ def run_retrieval_eval(
     aggregate["mrr"]            = primary.get("mrr",            0.0)
     aggregate["ndcg_at_10"]     = primary.get("ndcg_at_10",     0.0)
     aggregate["precision_at_5"] = primary.get("precision_at_5", 0.0)
+
+    # 按 category 分桶（v2 才有意义）
+    by_category: dict[str, dict] = {}
+    for pq in per_query:
+        cat = pq.get("category") or "unknown"
+        if cat not in by_category:
+            by_category[cat] = {"count": 0, "queries": []}
+        by_category[cat]["count"] += 1
+        by_category[cat]["queries"].append(pq["query_id"])
+    aggregate["by_category"] = by_category
+    aggregate["by_diagnostic_intent"] = {}
+    for pq in per_query:
+        di = pq.get("diagnostic_intent") or "unknown"
+        if di not in aggregate["by_diagnostic_intent"]:
+            aggregate["by_diagnostic_intent"][di] = {"count": 0}
+        aggregate["by_diagnostic_intent"][di]["count"] += 1
 
     return aggregate, per_query, failed

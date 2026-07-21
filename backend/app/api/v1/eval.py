@@ -24,6 +24,7 @@ from app.models.evaluation import EvaluationDataset, EvaluationQuestionRun, Eval
 from app.schemas.evaluation import (
     DatasetUploadResponse,
     EvaluationDatasetCreate,
+    EvaluationDatasetV2Create,
     EvaluationDatasetResponse,
     EvaluationMetricsResponse,
     EvaluationTaskCreate,
@@ -139,6 +140,80 @@ async def create_dataset(
         ground_truths=payload.ground_truths,
         created_by=current_user.id,
     )
+
+
+@router.post(
+    "/evaluation/datasets/v2",
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_dataset_v2(
+    payload: EvaluationDatasetV2Create,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user),
+):
+    """创建 v2 架构对齐评测数据集。
+
+    顶层结构与 scripts/eval/datasets/ups_v2_arch_aligned.json 一致：
+    - questions[] 每项含 question / ground_truth / metadata / retrieval_config / quality
+    - _dataset_meta 携带 rag_arch_fingerprint
+    """
+    if not await evaluation_service.verify_kb(db, payload.kb_id):
+        raise NotFoundException(f"Knowledge base {payload.kb_id} not found")
+
+    # 转 v2 → 内部 v1 存储形式（向后兼容 DB）
+    internal_questions = []
+    internal_ground_truths = []
+    for q in payload.questions:
+        text = q.get("question") or q.get("query") or ""
+        if not text:
+            continue
+        gt = q.get("ground_truth") or {}
+        # 把 v2 metadata 也压成 ground_truth 的 metadata 字段，供后续访问
+        if isinstance(gt, dict):
+            gt_meta = dict(gt.get("metadata") or {})
+            # 透传 quality 阈值 / diagnostic_intent / retrieval_config
+            q_quality = q.get("quality") or {}
+            q_meta = q.get("metadata") or {}
+            q_cfg = q.get("retrieval_config") or {}
+            gt_meta.update({
+                "format": "v2",
+                "chunk_ids": gt.get("chunk_ids") or [],
+                "answer": gt.get("answer", ""),
+                "category": q_meta.get("category"),
+                "difficulty": q_meta.get("difficulty"),
+                "tags": q_meta.get("tags"),
+                "diagnostic_intent": q_quality.get("diagnostic_intent"),
+                "rationale": q_quality.get("rationale"),
+                "max_allowed_distance": q_quality.get("max_allowed_distance"),
+                "retrieval_config": q_cfg,
+            })
+            gt_out = {**gt, "metadata": gt_meta}
+        else:
+            gt_out = {"chunks": [], "metadata": {"format": "v2"}}
+        internal_questions.append(text)
+        internal_ground_truths.append(gt_out)
+
+    if not internal_questions:
+        raise ValidationException("v2 数据集 questions 不能为空")
+
+    dataset = await evaluation_service.create_dataset(
+        db=db,
+        kb_id=payload.kb_id,
+        name=payload.name,
+        questions=internal_questions,
+        ground_truths=internal_ground_truths,
+        created_by=current_user.id,
+    )
+    # 返回 v2 原始 payload 供前端识别（叠加 id）
+    return {
+        "id": str(dataset.id),
+        "format": "v2",
+        "version": payload.version,
+        "name": dataset.name,
+        "kb_id": str(dataset.kb_id),
+        "questions_count": len(internal_questions),
+        "_dataset_meta": payload._dataset_meta,
+    }
 
 
 @router.get(
@@ -370,8 +445,19 @@ async def worker_stats(current_user: UserResponse = Depends(get_current_user)):
         return {"error": str(exc)}
 
 
+def _extract_v2_metadata(r: EvaluationQuestionRun) -> dict:
+    """从 ground_truths metadata 字段提取 v2 元数据（透传给前端）。"""
+    # 1. 优先从 metrics 拿
+    metrics = r.metrics or {}
+    if isinstance(metrics, dict) and metrics.get("v2_metadata"):
+        return metrics["v2_metadata"]
+
+    # 2. fall back: 找不到就走通用字段
+    return {}
+
+
 def _to_qr(r: EvaluationQuestionRun) -> dict:
-    return {
+    payload = {
         "id": r.id,
         "task_id": r.task_id,
         "question_index": r.question_index,
@@ -385,6 +471,11 @@ def _to_qr(r: EvaluationQuestionRun) -> dict:
         "started_at": r.started_at,
         "completed_at": r.completed_at,
     }
+    # 透传 v2 metadata（category/diagnostic_intent/max_allowed_distance 等）
+    v2_meta = _extract_v2_metadata(r)
+    if v2_meta:
+        payload["v2_metadata"] = v2_meta
+    return payload
 
 
 # ---------------------------------------------------------------------------

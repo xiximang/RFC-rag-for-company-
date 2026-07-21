@@ -16,11 +16,14 @@ def _fmt(x, default="-"):
 
 
 def generate_per_query_csv(per_query: list[dict]) -> str:
-    """生成 CSV：query_id, query, expected, mode, recall@10, mrr, ndcg@10, precision@5, top_retrieved。"""
+    """生成 CSV：query_id, query, expected, mode, recall@10, mrr, ndcg@10, precision@5, top_retrieved。
+
+    v2 增强：增加 category / difficulty / diagnostic_intent 列。
+    """
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow([
-        "query_id", "query", "expected_count",
+        "query_id", "query", "expected_count", "category", "difficulty", "diagnostic_intent",
         "mode", "recall_at_10", "mrr", "ndcg_at_10", "precision_at_5", "hit_count",
         "top_retrieved",
     ])
@@ -29,11 +32,15 @@ def generate_per_query_csv(per_query: list[dict]) -> str:
             if "error" in m:
                 writer.writerow([
                     rec["query_id"], rec["query"], len(rec["expected_chunks"]),
+                    rec.get("category", ""), rec.get("difficulty", ""),
+                    rec.get("diagnostic_intent", ""),
                     mode, "ERR", "ERR", "ERR", "ERR", "ERR", m["error"],
                 ])
                 continue
             writer.writerow([
                 rec["query_id"], rec["query"], len(rec["expected_chunks"]),
+                rec.get("category", ""), rec.get("difficulty", ""),
+                rec.get("diagnostic_intent", ""),
                 mode,
                 _fmt(m.get("recall_at_10")),
                 _fmt(m.get("mrr")),
@@ -63,6 +70,47 @@ def generate_final_report(final: dict, args, retrieval_aggregate: dict,
     else:
         lines.append("- LLM Judge：**已运行**")
     lines.append("")
+
+    # v2 数据集元数据
+    ds_meta = final.get("dataset_meta") or {}
+    if ds_meta.get("format") == "json_v2":
+        lines.append("## 📋 数据集元数据（v2 架构对齐）")
+        lines.append("")
+        if ds_meta.get("name"):
+            lines.append(f"- **名称**：{ds_meta['name']}")
+        if ds_meta.get("version"):
+            lines.append(f"- **版本**：{ds_meta['version']}")
+        if ds_meta.get("kb_id"):
+            lines.append(f"- **KB UUID**：`{ds_meta['kb_id']}`")
+        # 架构指纹
+        dsm = ds_meta.get("_dataset_meta") or {}
+        fp = dsm.get("rag_arch_fingerprint") or {}
+        if fp:
+            lines.append("- **RAG 架构指纹**：")
+            for k, v in fp.items():
+                lines.append(f"  - `{k}`: {v}")
+        # 校准状态
+        if dsm.get("calibration_status"):
+            lines.append(f"- **校准状态**：{dsm['calibration_status']}")
+        lines.append("")
+
+    # baseline 对比
+    bc = final.get("baseline_compare")
+    if bc:
+        lines.append("## 📈 与 baseline 对比")
+        lines.append("")
+        if bc.get("improved"):
+            lines.append("✅ **改进的指标**：")
+            for item in bc["improved"]:
+                lines.append(f"  - `{item['metric']}`: `{item['delta']:+.4f}`")
+        if bc.get("regressed"):
+            lines.append("")
+            lines.append("⚠️ **退化的指标**：")
+            for item in bc["regressed"]:
+                lines.append(f"  - `{item['metric']}`: `{item['delta']:+.4f}`")
+        if not bc.get("improved") and not bc.get("regressed"):
+            lines.append("（无显著变化，δ < 0.005）")
+        lines.append("")
 
     # 总分
     fs = final["final_score"]
@@ -112,6 +160,31 @@ def generate_final_report(final: dict, args, retrieval_aggregate: dict,
             lines.append("")
             lines.append("> 该维度**不计入最终分**，仅用于诊断向量化模型的精度短板。")
             lines.append("")
+
+    # 按 category 分桶（v2 模板）
+    by_cat = final.get("by_category") or {}
+    if by_cat:
+        lines.append("## 📊 按 category 分桶指标（primary mode）")
+        lines.append("")
+        lines.append("| Category | Query 数 | Recall@10 | MRR | NDCG@10 |")
+        lines.append("|---|---|---|---|---|")
+        for cat, st in sorted(by_cat.items()):
+            lines.append(f"| `{cat}` | {st['count']} | "
+                         f"{st['recall_at_10']:.4f} | {st['mrr']:.4f} | {st['ndcg_at_10']:.4f} |")
+        lines.append("")
+
+    # 按 diagnostic_intent 分桶
+    by_di = retrieval_aggregate.get("by_diagnostic_intent") or {}
+    if by_di:
+        lines.append("## 🎯 按 diagnostic_intent 分桶（v2 模板专用）")
+        lines.append("")
+        lines.append("> 每个 diagnostic_intent 单独验证 RAG 链路中的某一阶段")
+        lines.append("")
+        lines.append("| Diagnostic Intent | Query 数 |")
+        lines.append("|---|---|")
+        for di, st in sorted(by_di.items()):
+            lines.append(f"| `{di}` | {st['count']} |")
+        lines.append("")
 
     # 检索细分
     lines.append(f"## 检索指标（{retrieval_aggregate.get('primary_mode', 'hybrid')} 模式）")

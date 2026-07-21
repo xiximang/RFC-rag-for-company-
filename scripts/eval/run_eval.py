@@ -139,7 +139,9 @@ def main():
     parser.add_argument("--skip-llm", action="store_true", help="跳过 LLM Judge")
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--primary-mode", default="hybrid",
-                        choices=["semantic", "keyword", "hybrid"])
+                        choices=["hybrid", "semantic", "keyword"])
+    parser.add_argument("--save-baseline", action="store_true",
+                        help="把此次结果保存为 baseline（scripts/eval/baselines/baseline.json）")
     args = parser.parse_args()
 
     if args.output_dir:
@@ -242,8 +244,31 @@ def main():
           f"(percent: {final['final_score_100']})")
     print(f"   - retrieval: {final['breakdown']['retrieval']['weighted']:.4f}")
     print(f"   - llm:       {final['breakdown']['llm']['weighted']:.4f}")
+    # embedding_precision 报告
+    ep = final.get("embedding_precision") or {}
+    if ep.get("precision") is not None:
+        print(f"   - embedding_precision: {ep['precision']:.4f} "
+              f"({ep['pass_threshold_count']}/{ep['samples']})")
     print(f"   output dir: {out}")
     print("=" * 60)
+
+    # baseline 保存
+    if getattr(args, "save_baseline", False):
+        baseline_path = Path("scripts/eval/baselines/baseline.json")
+        baseline_path.parent.mkdir(parents=True, exist_ok=True)
+        baseline_data = {
+            "saved_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "dataset": str(args.dataset),
+            "final_score": final["final_score"],
+            "breakdown": final["breakdown"],
+            "embedding_precision": final.get("embedding_precision"),
+        }
+        baseline_path.write_text(
+            json.dumps(baseline_data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"📌 已保存 baseline: {baseline_path}")
+
     return 0
 
 

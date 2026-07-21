@@ -150,11 +150,37 @@ class LLMJudge:
         }
 
 
+def _extract_reference_answer(q: dict) -> str:
+    """从 query 中提取参考答案，兼容 v1/v2 格式。
+
+    v1 JSONL: reference_answer 字段
+    v2 JSON 顶层: ground_truth.answer 字段
+    """
+    # v2 格式：ground_truth.answer
+    gt = q.get("ground_truth")
+    if isinstance(gt, dict):
+        ans = gt.get("answer")
+        if ans:
+            return ans
+    # v1 格式
+    return q.get("reference_answer", "") or q.get("answer", "")
+
+
+def _extract_query_text(q: dict) -> str:
+    return q.get("query") or q.get("question") or ""
+
+
+def _extract_query_id(q: dict) -> str:
+    return q.get("query_id") or q.get("id") or ""
+
+
 def judge_batch(judge: LLMJudge, queries: list[dict], on_progress=None) -> tuple[dict, list[dict]]:
     """批量评分。
 
     queries 每项应包含：
-        query, reference_answer, generated_answer, contexts
+        v1: query, reference_answer, generated_answer, contexts, query_id
+        v2: question, ground_truth.answer, generated_answer, contexts, id
+        兼容: 同时支持 query/reference_answer/answer 等别名
     返回：
         aggregate: {faithfulness, relevance, helpfulness, samples_judged, total_samples}
         judgments: 每条记录的明细
@@ -165,16 +191,25 @@ def judge_batch(judge: LLMJudge, queries: list[dict], on_progress=None) -> tuple
 
     for i, q in enumerate(queries, 1):
         result = judge.judge(
-            query=q.get("query", ""),
-            reference=q.get("reference_answer", ""),
+            query=_extract_query_text(q),
+            reference=_extract_reference_answer(q),
             generated=q.get("generated_answer", ""),
             contexts=q.get("contexts", []),
         )
+        # 同时记录 v2 元数据（category / difficulty / diagnostic_intent）
         record = {
-            "query_id": q.get("query_id"),
+            "query_id": _extract_query_id(q),
             "scores": result["scores"],
             "tokens": result["tokens"],
         }
+        # v2 元数据透传
+        v2_meta = q.get("metadata") or {}
+        if v2_meta.get("category"):
+            record["category"] = v2_meta["category"]
+        if v2_meta.get("difficulty"):
+            record["difficulty"] = v2_meta["difficulty"]
+        if (q.get("quality") or {}).get("diagnostic_intent"):
+            record["diagnostic_intent"] = q["quality"]["diagnostic_intent"]
         if "error" in result:
             record["error"] = result["error"]
         judgments.append(record)
@@ -185,7 +220,7 @@ def judge_batch(judge: LLMJudge, queries: list[dict], on_progress=None) -> tuple
         n += 1
 
         if on_progress:
-            on_progress(i, len(queries), q.get("query_id"))
+            on_progress(i, len(queries), _extract_query_id(q))
 
     if n == 0:
         return {
@@ -193,10 +228,27 @@ def judge_batch(judge: LLMJudge, queries: list[dict], on_progress=None) -> tuple
             "samples_judged": 0, "total_samples": len(queries),
         }, []
 
+    # 按 category 分桶（v2 才有意义）
+    by_category = {}
+    for j in judgments:
+        cat = j.get("category") or "unknown"
+        if cat not in by_category:
+            by_category[cat] = {"count": 0, "faithfulness": 0.0, "relevance": 0.0, "helpfulness": 0.0}
+        by_category[cat]["count"] += 1
+        by_category[cat]["faithfulness"] += j["scores"]["faithfulness"]
+        by_category[cat]["relevance"]    += j["scores"]["relevance"]
+        by_category[cat]["helpfulness"]  += j["scores"]["helpfulness"]
+    for cat, st in by_category.items():
+        cnt = st["count"]
+        st["faithfulness"] = round(st["faithfulness"] / cnt, 4)
+        st["relevance"]    = round(st["relevance"] / cnt, 4)
+        st["helpfulness"]  = round(st["helpfulness"] / cnt, 4)
+
     return {
         "faithfulness": round(faith_sum / n, 4),
         "relevance":    round(rel_sum   / n, 4),
         "helpfulness":  round(help_sum  / n, 4),
         "samples_judged": n,
         "total_samples":  len(queries),
+        "by_category": by_category,  # v2 才有数据
     }, judgments

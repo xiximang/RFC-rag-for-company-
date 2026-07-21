@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import {
   Input,
   Button,
@@ -202,7 +202,22 @@ const SearchConsole = () => {
     }
   }
 
-  const handleSend = async () => {
+  // 节流：限制搜索请求频率（默认 3 秒最多 1 次），
+  // 避免连续点击/回车触发 MiniMax LLM 限流（RPM 200）。
+  // 实测：3s 间隔单用户 ≈ 20 RPM，30% 上限内安全。
+  const lastSendAtRef = useRef<number>(0)
+  const SEND_COOLDOWN_MS = 3000
+
+  const handleSend = useCallback(async () => {
+    // 冷却期检查：3 秒内只允许一次请求
+    const now = Date.now()
+    const since = now - lastSendAtRef.current
+    if (since < SEND_COOLDOWN_MS) {
+      const waitSec = Math.ceil((SEND_COOLDOWN_MS - since) / 1000)
+      message.warning(`请求过于频繁，请 ${waitSec} 秒后再试（避免触发 LLM 限流）`)
+      return
+    }
+    lastSendAtRef.current = now
     if (!query.trim()) return
     if (selectedKbs.length === 0) {
       message.warning(t('searchConsole.selectKbWarning'))
@@ -276,7 +291,7 @@ const SearchConsole = () => {
         chatAbortRef.current = null
       }
     }
-  }
+  }, [query, selectedKbs, currentConversationId, modalities, t])
 
   return (
     <div className="responsive-page" style={{ display: 'flex', gap: spacing.lg, height: 'calc(100vh - 180px)', minWidth: 0, overflow: 'hidden' }}>
@@ -546,6 +561,7 @@ const SearchConsole = () => {
               icon={<SendOutlined />}
               onClick={handleSend}
               loading={loading}
+              disabled={loading || (Date.now() - lastSendAtRef.current < SEND_COOLDOWN_MS)}
               style={{
                 height: 'auto',
                 borderRadius: `0 ${radius.md}px ${radius.md}px 0`,

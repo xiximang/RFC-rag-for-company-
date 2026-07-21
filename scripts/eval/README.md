@@ -121,6 +121,34 @@ final_score_100 = final_score × 100
 - 采样 20% × 10 query = 2 次 ≈ 800 tokens
 - 对 MiniMax-M3 RPM 200 / TPM 10M 的限额，实际占用 < 0.01%
 
+## 4. 数据集校准（诊断 recall@K 异常）
+
+```bash
+PGHOST=localhost PGPORT=5432 PGUSER=rag_user PGPASSWORD=rag_password PGDATABASE=rag_kb \
+python3 -m scripts.eval.lib.dataset_validator \
+    --dataset scripts/eval/datasets/ups_v1.jsonl \
+    --kb-id ups-eval-kb \
+    --admin-pass 'Admin@123456' \
+    --output eval_runs/<ts>/dataset_validation.json
+```
+
+输出：
+- 覆盖率（expected_chunks 中能在 KB 找到的比例）
+- 每 query 命中状态：`all_hit` / `partial_hit` / `zero_hit`
+- 前 20 个 missing 示例
+- KB 文档清单与 chunk 数量
+
+**关键意义**：如果 coverage < 100%，说明 `recall@K` 异常可能是因为 expected_chunk 在 KB 里就不存在，**不是检索系统问题**。
+
+也可在 Python 中直接调用：
+
+```python
+from scripts.eval.lib.dataset_validator import validate_dataset
+report = validate_dataset(queries, api_url, kb_id, token)
+print(report["coverage_rate"])
+print(report["missing_samples"][:5])
+```
+
 ## 对比旧的 eval_retrieval_ups.py
 
 | 维度 | 旧 | 新 |

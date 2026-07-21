@@ -81,13 +81,40 @@ def resolve_kb_ids(api_url, headers, kb_ids_or_names):
 
 
 def load_queries(dataset_path):
-    queries = []
-    for line in Path(dataset_path).read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        queries.append(json.loads(line))
-    return queries
+    """加载数据集，支持 .jsonl / .json(数组) / .json(顶层带 questions)。
+
+    返回 (queries 列表, dataset_meta dict)。
+    """
+    # 优先复用 validator 的解析器，保证三格式一致
+    try:
+        from eval.lib.dataset_validator import _load_dataset_questions
+        return _load_dataset_questions(Path(dataset_path))
+    except ImportError:
+        pass
+
+    # 回退：内联实现（保持 run_eval.py 独立可用）
+    path = Path(dataset_path)
+    if path.suffix == ".jsonl":
+        queries = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            queries.append(json.loads(line))
+        return queries, {"format": "jsonl"}
+
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(raw, list):
+        return raw, {"format": "json_array"}
+    if isinstance(raw, dict) and isinstance(raw.get("questions"), list):
+        return raw["questions"], {
+            "format": "json_v2",
+            "name": raw.get("name"),
+            "version": raw.get("version"),
+            "kb_id": raw.get("kb_id"),
+            "_dataset_meta": raw.get("_dataset_meta", {}),
+        }
+    raise ValueError(f"未知数据集格式: {path}")
 
 
 def write_json(path, data):
@@ -136,8 +163,11 @@ def main():
         "timestamp":    time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     })
 
-    queries = load_queries(args.dataset)
-    print(f"[1/4] Loaded {len(queries)} queries from {args.dataset}")
+    queries, ds_meta = load_queries(args.dataset)
+    print(f"[1/4] Loaded {len(queries)} queries from {args.dataset} "
+          f"(format={ds_meta.get('format','jsonl')})")
+    if ds_meta.get("format") == "json_v2":
+        print(f"      Dataset: {ds_meta.get('name','?')} v={ds_meta.get('version','?')}")
 
     token = login(args.api_url, args.admin_user, args.admin_pass)
     headers = {"Authorization": f"Bearer {token}"}
@@ -198,7 +228,8 @@ def main():
     else:
         print(f"[4/4] Skipped LLM Judge")
 
-    final = compute_final_score(retrieval_aggregate, llm_metrics)
+    final = compute_final_score(retrieval_aggregate, llm_metrics, per_query=per_query)
+    final["dataset_meta"] = ds_meta  # 让 final_report 看到 v2 元数据
     write_json(out / "metrics_summary.json", final)
     Path(out / "final_report.md").write_text(
         generate_final_report(final, args, retrieval_aggregate, llm_stats),

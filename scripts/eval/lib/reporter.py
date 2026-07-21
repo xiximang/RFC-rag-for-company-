@@ -82,6 +82,37 @@ def generate_final_report(final: dict, args, retrieval_aggregate: dict,
                  f"{bd['llm']['score']:.4f} | {bd['llm']['weighted']:.4f} |")
     lines.append("")
 
+    # 向量化精准度（v2 模板专用，独立报告，不计入最终分）
+    ep = final.get("embedding_precision") or {}
+    if ep and ep.get("samples", 0) > 0:
+        lines.append("## 🔬 向量化精准度（v2 模板专用）")
+        lines.append("")
+        if ep.get("precision") is None:
+            lines.append("> 数据集未提供 max_allowed_distance，跳过精准度评估")
+        else:
+            mean_d = ep.get("mean_distance", 0)
+            max_d = ep.get("max_distance", 0)
+            precision = ep.get("precision", 0)
+            pass_cnt = ep.get("pass_threshold_count", 0)
+            fail_cnt = ep.get("fail_threshold_count", 0)
+            total_cnt = pass_cnt + fail_cnt
+            lines.append(f"- 通过阈值：**{pass_cnt}/{total_cnt} ({precision*100:.1f}%)**")
+            lines.append(f"- 平均 cosine 距离：**{mean_d:.4f}**（越小越精准）")
+            lines.append(f"- 最大 cosine 距离：**{max_d:.4f}**")
+            if ep.get("fail_queries"):
+                lines.append("")
+                lines.append("### ⚠️ 未通过阈值的 query")
+                lines.append("")
+                lines.append("| ID | 问题 | 距离 | 阈值 | 诊断意图 |")
+                lines.append("|---|---|---|---|---|")
+                for fq in ep["fail_queries"]:
+                    lines.append(f"| {fq.get('id','-')} | {fq.get('question','-')[:30]}... | "
+                                 f"{fq.get('distance',0):.4f} | {fq.get('threshold',0):.4f} | "
+                                 f"`{fq.get('diagnostic_intent','-')}` |")
+            lines.append("")
+            lines.append("> 该维度**不计入最终分**，仅用于诊断向量化模型的精度短板。")
+            lines.append("")
+
     # 检索细分
     lines.append(f"## 检索指标（{retrieval_aggregate.get('primary_mode', 'hybrid')} 模式）")
     lines.append("")

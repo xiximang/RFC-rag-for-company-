@@ -407,6 +407,43 @@ def _load_jsonl(path: Path) -> list[dict]:
     return out
 
 
+def _load_dataset_questions(path: Path) -> tuple[list[dict], dict]:
+    """加载数据集，返回 (questions 列表, 元数据 dict)。
+
+    支持三种格式：
+      - .jsonl: 每行一个 query 对象（JSONL 格式，无元数据）
+      - .json: 顶层是数组
+      - .json: 顶层是 dict，含 questions 字段（v2 架构对齐格式）
+
+    元数据 dict 始终有这些字段：
+      - format: 'jsonl' | 'json_array' | 'json_v2'
+      - name / version / kb_id / _dataset_meta
+    """
+    import json as _json
+    if path.suffix == ".jsonl":
+        return _load_jsonl(path), {"format": "jsonl"}
+
+    raw = _json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(raw, list):
+        return raw, {"format": "json_array"}
+
+    if isinstance(raw, dict):
+        if "questions" in raw and isinstance(raw["questions"], list):
+            # v2 格式：剥离 _dataset_meta 等顶层元数据
+            meta = {
+                "format": "json_v2",
+                "name": raw.get("name"),
+                "version": raw.get("version"),
+                "kb_id": raw.get("kb_id"),
+                "_dataset_meta": raw.get("_dataset_meta", {}),
+            }
+            return raw["questions"], meta
+
+    raise ValueError(
+        f"未知的数据集格式: {path}，要求 .jsonl / .json(数组) / .json(顶层带 questions 字段)"
+    )
+
+
 def validate_dataset_file(
     dataset_path: str,
     api_url: str,
@@ -414,7 +451,7 @@ def validate_dataset_file(
     admin_user: str = "admin",
     admin_pass: str = "...",
 ) -> dict:
-    """封装：登录 + 加载数据集 + 校准。"""
+    """封装：登录 + 加载数据集 + 校准。支持 v1 JSONL + v2 JSON 顶层格式。"""
     token_resp = requests.post(
         f"{api_url.rstrip('/')}/api/v1/auth/login",
         data={"username": admin_user, "password": admin_pass},
@@ -423,8 +460,11 @@ def validate_dataset_file(
     token_resp.raise_for_status()
     token = token_resp.json()["access_token"]
 
-    queries = _load_jsonl(Path(dataset_path))
-    return validate_dataset(queries, api_url, kb_id_or_name, token)
+    queries, ds_meta = _load_dataset_questions(Path(dataset_path))
+    report = validate_dataset(queries, api_url, kb_id_or_name, token)
+    # 把数据集元数据附加到报告（便于前端展示 v2 模板的版本号、校准状态等）
+    report["dataset_meta"] = ds_meta
+    return report
 
 
 def _print_summary(report: dict) -> None:

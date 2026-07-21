@@ -9,7 +9,10 @@ name: rag-lightweight
 
 services:
   postgres:
-    image: pgvector/pgvector:pg16
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.pgvector-zh
+    image: rag-system-postgres-zh:pg16
     container_name: rag-lw-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-rag_user}
@@ -62,7 +65,7 @@ services:
   app-backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.lightweight
+      dockerfile: Dockerfile
     image: rag-system-backend:merged
     container_name: rag-lw-app-backend
     env_file:
@@ -105,6 +108,7 @@ services:
       - ./backend/app:/app/app    # 挂载整个 app 目录，代码改动自动同步
       - ./samples:/app/samples    # 挂载 samples 目录
       - ./samples_2:/app/samples_2  # 挂载 samples_2 目录
+      - ./scripts:/app/scripts    # 挂载评测脚本（含 v2 模板数据集）
       - local_storage:/data/rag-documents
     depends_on:
       postgres:

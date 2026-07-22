@@ -19,7 +19,7 @@ from app.database import AsyncSessionLocal, engine
 from app.retrieval.vector_store import get_vector_store
 
 # Router imports
-from app.api.v1 import auth, health
+from app.api.v1 import auth, feedback, health
 
 # Placeholder routers for upcoming modules
 from app.api.v1 import (
@@ -177,6 +177,7 @@ app.include_router(knowledge_bases.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
+app.include_router(feedback.router, prefix="/api/v1")
 app.include_router(permissions.router, prefix="/api/v1")
 app.include_router(keywords.router, prefix="/api/v1")
 app.include_router(groups.router, prefix="/api/v1")

@@ -17,6 +17,22 @@ class SourceItem(BaseModel):
     timestamp: Optional[str] = None
 
 
+class CandidateItem(BaseModel):
+    """Rerank 候选项（已过五级权限穿透，content 为降级后的值）。
+
+    工程师反馈闭环的展示单元。content 必须直接取 retrieval_service 返回的
+    item["content"]（L5 降级后已是占位符），绝不可按 chunk_id 反查原文，
+    否则绕过 L5 关键词降级，向低权限用户暴露敏感原文。
+    """
+    rank: int
+    chunk_id: Optional[str] = None
+    doc_id: Optional[str] = None
+    content: str
+    rerank_score: Optional[float] = None
+    max_keyword_level: str = "L0"
+    filtered: bool = False
+
+
 class ChatRequest(BaseModel):
     query: str
     kb_ids: List[UUID]
@@ -34,6 +50,7 @@ class ChatResponse(BaseModel):
     sources: List[SourceItem] = []
     strategy: Optional[Dict[str, Any]] = None
     conversation_id: Optional[UUID] = None
+    candidates: Optional[List[CandidateItem]] = None
 
 
 class ConversationCreate(BaseModel):
@@ -61,6 +78,9 @@ class MessageResponse(BaseModel):
     sources: List[SourceItem] = []
     feedback_rating: Optional[int] = None
     feedback_comment: Optional[str] = None
+    # 工程师反馈与上下文工程：候选落库回看 + 候选排序反馈（可选，不影响现有字段）
+    candidates: Optional[List[CandidateItem]] = None
+    candidate_feedback: Optional[Dict[str, Any]] = None
     created_at: datetime
 
     class Config:
@@ -80,3 +100,13 @@ class ChatWithHistoryRequest(BaseModel):
 class FeedbackCreate(BaseModel):
     rating: int = Field(..., ge=-1, le=1)
     comment: Optional[str] = None
+
+
+class CandidateFeedbackRequest(BaseModel):
+    """工程师提交的候选排序/评分反馈"""
+    ranking: List[int]
+    chosen_rank: int
+    ratings: Optional[Dict[int, int]] = None
+    comment: Optional[str] = None
+    action: str = "rank"
+    edited_answer: Optional[str] = None

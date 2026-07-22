@@ -1,0 +1,433 @@
+============================================================
+14_UPS5000&SmartLi 机柜底座接口图.xlsx - 全部 25 个 chunks
+============================================================
+
+--- Chunk 0 (长度:531) ---
+【封面 Cover】
+列: 批准
+Granted By, 列1, 日期
+Date, 列3
+批准
+Granted By: Huawei Digital Power Technologies Co., Ltd.
+批准
+Granted By: All rights reserved
+
+【修订记录 Revision Record】
+列: 日期
+Date, 修订版本
+Revised Version, 修改描述
+Modification Description, 作者/修订人
+Author/Reviser
+日期
+Date: 2024.09.20; 修订版本
+Revised Version: V1.0; 修改描述
+Modification Description: 首次发布
+First release; 作者/修订人
+Author/Reviser: Jiao Bin 30015507
+日期
+Date: 2026.5.27; 修订版本
+Revised Version: V2.0; 修改描述
+Modification Description: 新增SmartLi 5.0底座接口尺寸; 作者/修订人
+Author/Reviser: chen rui 60037707
+
+--- Chunk 1 (长度:658) ---
+: V2.0; 修改描述
+Modification Description: 新增SmartLi 5.0底座接口尺寸; 作者/修订人
+Author/Reviser: chen rui 60037707
+
+【选型目录 Selection Catalog】
+列: 产品类型
+Product Type, 机柜宽度 W（mm）
+Cabinet Width (mm), 机柜深度 D（mm）
+Cabinet Depth (mm), 图纸名称
+Drawing Name, 备注
+Remarks, 底座型号和尺寸说明
+Base Model and Dimensions
+产品类型
+Product Type: UPS5000;机柜宽度 W（mm）
+Cabinet Width (mm): 600;机柜深度 D（mm）
+Cabinet Depth (mm): 1000;图纸名称
+Drawing Name: 带滚轮机柜600*1000 Cabinet with castors (600 mm x 1000 mm);备注
+Remarks: 适配SmartLi 5.0机柜 Applicable cabinet: SmartLi 5.0 cabinet
+机柜宽度 W（mm）
+Cabinet Width (mm): 600;机柜深度 D（mm）
+Cabinet Depth (mm): 850;图纸名称
+Drawing Name: 带滚轮机柜600*850 Cabinet with castors (600 mm x 850 mm);
+
+--- Chunk 2 (长度:605) ---
+（mm）
+Cabinet Depth (mm): 850;图纸名称
+Drawing Name: 带滚轮机柜600*850 Cabinet with castors (600 mm x 850 mm);
+
+备注
+Remarks: 适配机柜ups5000-E/S/A-120K-300K Applicable cabinet: UPS5000-E/S/A-120K-300K
+适配SmartLi机柜 Applicable cabinet: SmartLi cabinet
+机柜宽度 W（mm）
+Cabinet Width (mm): 600;机柜深度 D（mm）
+Cabinet Depth (mm): 1000;图纸名称
+Drawing Name: 支脚机柜600*1000 Cabinet with feet (600 mm x 1000 mm);备注
+Remarks: 适配机柜UPS5000-H-200K-NTN Applicable cabinet: UPS5000-H-200K-NTN
+机柜宽度 W（mm）
+Cabinet Width (mm): 1200;机柜深度 D（mm）
+Cabinet Depth (mm): 850;图纸名称
+Drawing Name: 支脚机柜1200*850（双柜） 1200 mm x 850 mm cabinet with feet (two cabinets);
+
+--- Chunk 3 (长度:650) ---
+pth (mm): 850;图纸名称
+Drawing Name: 支脚机柜1200*850（双柜） 1200 mm x 850 mm cabinet with feet (two cabinets);
+
+备注
+Remarks: 适配机柜UPS5000-E/S/A-400K/500K Applicable cabinet: UPS5000-E/S/A-400K/500K
+机柜宽度 W（mm）
+Cabinet Width (mm): 1400;图纸名称
+Drawing Name: 支脚机柜1400*850（双柜） 1400 mm x 850 mm cabinet with feet (two cabinets);备注
+Remarks: 适配机柜UPS5000-E/S/A-600K Applicable cabinet: UPS5000-E/S/A-600K
+机柜宽度 W（mm）
+Cabinet Width (mm): 2400;图纸名称
+Drawing Name: 支脚机柜2400*850（四柜） 2400 mm x 850 mm cabinet with feet (four cabinets);备注
+Remarks: 适配机柜UPS5000-E/S/A-800K Applicable cabinet: UPS5000-E/S/A-800K
+机柜宽度 W（mm）
+Cabinet Width (mm): 800;机柜深度 D（mm）
+Cabinet Depth (mm): 1000;
+
+--- Chunk 4 (长度:580) ---
+ cabinet: UPS5000-E/S/A-800K
+机柜宽度 W（mm）
+Cabinet Width (mm): 800;机柜深度 D（mm）
+Cabinet Depth (mm): 1000;
+
+图纸名称
+Drawing Name: 支脚机柜800*1000 800 mm x 1000 mm cabinet with feet;备注
+Remarks: 适配机柜UPS5000-H-400K-600K-NT
+UPS5000-H-400K-600K-FT
+UPS5000-H-400K-600K-NTR Applicable cabinet: UPS5000-H-400K-600K-NT, UPS5000-H-400K-600K-FT, UPS5000-H-400K-600K-NTR;底座型号和尺寸说明
+Base Model and Dimensions: X表示整列机柜深度
+X indicates the depth of the entire row of cabinets
+机柜宽度 W（mm）
+Cabinet Width (mm): 800;图纸名称
+Drawing Name: 支脚机柜800*1000（柜中柜） 800 mm x 1000 mm cabinet with feet (with an internal cabinet);
+
+--- Chunk 5 (长度:690) ---
+;图纸名称
+Drawing Name: 支脚机柜800*1000（柜中柜） 800 mm x 1000 mm cabinet with feet (with an internal cabinet);
+
+备注
+Remarks: 适配机柜UPS5000-H-400K-600K-FTM(柜中柜机型) Applicable cabinet: UPS5000-H-400K-600K-FTM (with an internal cabinet)
+机柜宽度 W（mm）
+Cabinet Width (mm): 1600;图纸名称
+Drawing Name: 支脚机柜1600*1000（双柜） 1600 mm x 1000 mm cabinet with feet (two cabinets);备注
+Remarks: 适配机柜UPS5000-H-800K/1200K Applicable cabinet: UPS5000-H-800K/1200K
+机柜宽度 W（mm）
+Cabinet Width (mm): 2400;图纸名称
+Drawing Name: 支脚机柜2400*1000（三柜） 2400 mm x 1000 mm cabinet with feet (three cabinets);备注
+Remarks: 适配机柜UPS5000-H-1600K Applicable cabinet: UPS5000-H-1600K
+产品类型
+Product Type: 其他机柜 Other cabinets;机柜宽度 W（mm）
+Cabinet Width (mm): 400;
+
+--- Chunk 6 (长度:663) ---
+ cabinet: UPS5000-H-1600K
+产品类型
+Product Type: 其他机柜 Other cabinets;机柜宽度 W（mm）
+Cabinet Width (mm): 400;
+
+机柜深度 D（mm）
+Cabinet Depth (mm): 1000;图纸名称
+Drawing Name: 支脚机柜400*1000 Cabinet with feet (400 mm x 1000 mm);备注
+Remarks: 适配机柜UPS5000-H系列使用的进线柜或风扇柜 Applicable cabinet: low-voltage input cabinet or fan cabinet for the UPS5000-H series
+机柜宽度 W（mm）
+Cabinet Width (mm): 400;机柜深度 D（mm）
+Cabinet Depth (mm): 850;图纸名称
+Drawing Name: 带滚轮机柜400*850 Cabinet with castors (400 mm x 850 mm);备注
+Remarks: 适配机柜ups5000-E/S/A-120K-300K使用的进线柜 Applicable cabinet: low-voltage input cabinet for UPS5000-E/S/A-120K-300K
+机柜宽度 W（mm）
+Cabinet Width (mm): 600;机柜深度 D（mm）
+Cabinet Depth (mm): 1200;
+
+--- Chunk 7 (长度:700) ---
+ for UPS5000-E/S/A-120K-300K
+机柜宽度 W（mm）
+Cabinet Width (mm): 600;机柜深度 D（mm）
+Cabinet Depth (mm): 1200;
+
+图纸名称
+Drawing Name: 带滚轮机柜600*850+选配上出风 600 mm x 850 mm cabinet with castors + Top air-flow cabinet;备注
+Remarks: 适配机柜ups5000-E/S/A-120K-300K选配上出风 Applicable cabinet: UPS5000-E/S/A-120K-300K (with a top air-flow cabinet configured)
+机柜宽度 W（mm）
+Cabinet Width (mm): 1200;机柜深度 D（mm）
+Cabinet Depth (mm): 1200;图纸名称
+Drawing Name: 支脚机柜1200*850+选配上出风 1200 mm x 850 mm cabinet with feet + Top air-flow cabinet;备注
+Remarks: 适配机柜UPS5000-E/S/A-400K/500K选配上出风 Applicable cabinet: UPS5000-E/S/A-400K/500K (with a top air-flow cabinet configured)
+机柜宽度 W（mm）
+Cabinet Width (mm): 1400;机柜深度 D（mm）
+Cabinet Depth (mm): 1200;
+
+--- Chunk 8 (长度:613) ---
+ir-flow cabinet configured)
+机柜宽度 W（mm）
+Cabinet Width (mm): 1400;机柜深度 D（mm）
+Cabinet Depth (mm): 1200;
+
+图纸名称
+Drawing Name: 支脚机柜1400*850+选配上出风 1400 mm x 850 mm cabinet with feet + Top air-flow cabinet;备注
+Remarks: 适配机柜UPS5000-E/S/A-600K选配上出风 Applicable cabinet: UPS5000-E/S/A-600K (with a top air-flow cabinet configured)
+产品类型
+Product Type: 注/Notes：
+1.本底座接口图选型表及图纸文件仅适用于适用于华为平台版本机柜，其它定制类机柜可能涉及外部接口变化，请单独联系华为数字能源技术支持获取。1.This document applies only to cabinets of Huawei platform versions.For other customized cabinets, contact Huawei Digital Power technical support as these cabinets may involve external port changes.
+
+--- Chunk 9 (长度:862) ---
+ contact Huawei Digital Power technical support as these cabinets may involve external port changes.
+
+【P1】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 1, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 10 (长度:862) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P2】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 2, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 11 (长度:867) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P3】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 3, of, 列9, 15.0, 列11, 列12
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 12 (长度:862) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P4】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 4, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 13 (长度:862) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P5】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 5, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 14 (长度:670) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P6】
+列: 列0, 图纸名称
+Drawing Name, 支脚机柜2400*850（四柜） 2400 mm x 850 mm cabinet with feet (four cabinets), 返回主页 
+Back to Selection Catalog, 页码
+Page No., 第, 6.0, 页, 列8, 共, 15.0, 页
+第: Page;页: 页 6
+页 
+Name: 0, dtype: object;列8: of;15.0: 15.0;页: 页 6
+页 
+Name: 0, dtype: object
+页码
+Page No.: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1.The cabinet width tolerance is (0, –3) mm.The unit of the dimensions in the figure is millimeter.2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2.There is no requirement on the base material.The recommended color is black (RAL9005).3.底座承重要求不少于2T；3.
+
+--- Chunk 15 (长度:552) ---
+ere is no requirement on the base material.The recommended color is black (RAL9005).3.底座承重要求不少于2T；3.
+
+The bearing capacity of the base must be at least 2 tons.4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；5.Weld M12 nuts at the positions where the cabinet is connected to the base.The welding strength must be ensured and all nuts are properly welded.;页: 页 
+页 
+Name: 1, dtype: str;页: 页 
+页 
+Name: 1, dtype: str
+
+--- Chunk 16 (长度:862) ---
+ ensured and all nuts are properly welded.;页: 页 
+页 
+Name: 1, dtype: str;页: 页 
+页 
+Name: 1, dtype: str
+
+【P7】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 7, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 17 (长度:862) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P8】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 8, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 18 (长度:862) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P9】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 9, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 19 (长度:864) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P10】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 10, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 20 (长度:864) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P11】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 11, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 21 (长度:864) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P12】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 12, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 22 (长度:864) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P13】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 13, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 23 (长度:864) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P14】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 14, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+--- Chunk 24 (长度:864) ---
+net is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+
+【P15】
+列: 列0, 列1, 列2, 列3, 列4, Page , 列6, 15, of, 列9, 15.0, 列11
+列4: 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the figure is millimeter.
+2.底座材料不做要求，颜色建议为黑色（RAL9005）
+2. There is no requirement on the base material. The recommended color is black (RAL9005).
+3.底座承重要求不少于2T；
+3. The bearing capacity of the base must be at least 2 tons.
+4.相连底座需用螺栓并联，底座需保证至少四角与地面固定
+4.Connect adjacent bases in parallel using bolts .Ensure that each base is secured to the ground through at least four corners.
+5.与机柜连接位置需焊接M12螺母，且要保证焊接强度，不可出现虚焊；
+5. Weld M12 nuts at the positions where the cabinet is connected to the base. The welding strength must be ensured and all nuts are properly welded.
+

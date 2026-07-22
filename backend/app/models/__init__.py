@@ -5,7 +5,7 @@ from app.models.chunk import Chunk
 from app.models.collaboration import Bookmark, Comment
 from app.models.conversation import Conversation
 from app.models.document import Document
-from app.models.evaluation import EvaluationDataset, EvaluationTask
+from app.models.evaluation import EvaluationDataset, EvaluationQuestionRun, EvaluationTask
 from app.models.group import UserGroup
 from app.models.keyword import KeywordMatchLog, SensitiveKeyword
 from app.models.knowledge_base import KnowledgeBase
@@ -38,6 +38,7 @@ __all__ = [
     "Conversation",
     "Document",
     "EvaluationDataset",
+    "EvaluationQuestionRun",
     "EvaluationTask",
     "UserGroup",
     "KeywordMatchLog",

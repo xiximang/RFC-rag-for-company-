@@ -1,0 +1,420 @@
+
+Query: SOH显示电池异常，电池放电电压较低。
+Expected: {'02_iBattery 3.0 用户手册.pdf_chunk65'}
+  [semantic] top=30
+    #1 02_iBattery 3.0 用户手册.pdf_chunk65 ← ✅
+    #2 02_iBattery 3.0 用户手册.pdf_chunk66
+    #3 02_iBattery 3.0 用户手册.pdf_chunk64
+    #4 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk173
+    #5 02_iBattery 3.0 用户手册.pdf_chunk67
+    #6 18_UPS5000 告警参考.pdf_chunk625
+    #7 18_UPS5000 告警参考.pdf_chunk173
+    #8 18_UPS5000 告警参考.pdf_chunk175
+    #9 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk151
+    #10 18_UPS5000 告警参考.pdf_chunk213
+    recall@3=0.50 recall@5=0.50 mrr=1.00
+
+Query: SOH显示电池异常，电池放电电压较低。
+Expected: {'02_iBattery 3.0 用户手册.pdf_chunk65'}
+  [keyword ] top=2
+    #1 02_iBattery 3.0 用户手册.pdf_chunk66
+    #2 02_iBattery 3.0 用户手册.pdf_chunk65 ← ✅
+    recall@3=0.50 recall@5=0.50 mrr=0.50
+
+Query: SOH显示电池异常，电池放电电压较低。
+Expected: {'02_iBattery 3.0 用户手册.pdf_chunk65'}
+  [hybrid  ] top=30
+    #1 02_iBattery 3.0 用户手册.pdf_chunk65 ← ✅
+    #2 02_iBattery 3.0 用户手册.pdf_chunk66
+    #3 18_UPS5000 告警参考.pdf_chunk628
+    #4 02_iBattery 3.0 用户手册.pdf_chunk64
+    #5 02_iBattery 3.0 用户手册.pdf_chunk67
+    #6 02_iBattery 3.0 用户手册.pdf_chunk63
+    #7 18_UPS5000 告警参考.pdf_chunk625
+    #8 18_UPS5000 告警参考.pdf_chunk18
+    #9 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk172
+    #10 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk173
+    recall@3=0.50 recall@5=0.50 mrr=1.00
+
+Query: iBOX的RF_Z指示灯不亮了
+Expected: {'01_iBattery 3.0 快速指南.pdf_chunk14', '02_iBattery 3.0 用户手册.pdf_chunk55', '02_iBattery 3.0 用户手册.pdf_chunk77'}
+  [semantic] top=30
+    #1 01_iBattery 3.0 快速指南.pdf_chunk15
+    #2 02_iBattery 3.0 用户手册.pdf_chunk77 ← ✅
+    #3 01_iBattery 3.0 快速指南.pdf_chunk16
+    #4 10_UPS5000-E 监控模块 用户手册.pdf_chunk8
+    #5 02_iBattery 3.0 用户手册.pdf_chunk74
+    #6 02_iBattery 3.0 用户手册.pdf_chunk75
+    #7 02_iBattery 3.0 用户手册.pdf_chunk26
+    #8 02_iBattery 3.0 用户手册.pdf_chunk21
+    #9 02_iBattery 3.0 用户手册.pdf_chunk71
+    #10 02_iBattery 3.0 用户手册.pdf_chunk55 ← ✅
+    recall@3=0.20 recall@5=0.20 mrr=0.50
+
+Query: iBOX的RF_Z指示灯不亮了
+Expected: {'01_iBattery 3.0 快速指南.pdf_chunk14', '02_iBattery 3.0 用户手册.pdf_chunk55', '02_iBattery 3.0 用户手册.pdf_chunk77'}
+  [keyword ] top=0
+    recall@3=0.00 recall@5=0.00 mrr=0.00
+
+Query: iBOX的RF_Z指示灯不亮了
+Expected: {'01_iBattery 3.0 快速指南.pdf_chunk14', '02_iBattery 3.0 用户手册.pdf_chunk55', '02_iBattery 3.0 用户手册.pdf_chunk77'}
+  [hybrid  ] top=30
+    #1 01_iBattery 3.0 快速指南.pdf_chunk14 ← ✅
+    #2 02_iBattery 3.0 用户手册.pdf_chunk55 ← ✅
+    #3 02_iBattery 3.0 用户手册.pdf_chunk78
+    #4 02_iBattery 3.0 用户手册.pdf_chunk75
+    #5 02_iBattery 3.0 用户手册.pdf_chunk54
+    #6 02_iBattery 3.0 用户手册.pdf_chunk77 ← ✅
+    #7 02_iBattery 3.0 用户手册.pdf_chunk69
+    #8 02_iBattery 3.0 用户手册.pdf_chunk26
+    #9 02_iBattery 3.0 用户手册.pdf_chunk30
+    #10 01_iBattery 3.0 快速指南.pdf_chunk16
+    recall@3=0.40 recall@5=0.40 mrr=1.00
+  (改写: '下发电池电压低关机的命令是什么' → '下发电池电压低关机的命令')
+
+Query: 下发电池电压低关机的命令是什么
+Expected: {'03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk185', '05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk198', '05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk197', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk187', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk186'}
+  [semantic] top=30
+    #1 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk197 ← ✅
+    #2 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk187 ← ✅
+    #3 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk199
+    #4 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk206
+    #5 10_UPS5000-E 监控模块 用户手册.pdf_chunk214
+    #6 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk185 ← ✅
+    #7 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk198 ← ✅
+    #8 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk212
+    #9 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk203
+    #10 10_UPS5000-E 监控模块 用户手册.pdf_chunk134
+    recall@3=0.29 recall@5=0.29 mrr=1.00
+
+Query: 下发电池电压低关机的命令是什么
+Expected: {'03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk185', '05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk198', '05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk197', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk187', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk186'}
+  [keyword ] top=4
+    #1 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk197 ← ✅
+    #2 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk198 ← ✅
+    #3 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk187 ← ✅
+    #4 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk188
+    recall@3=0.43 recall@5=0.43 mrr=1.00
+
+Query: 下发电池电压低关机的命令是什么
+Expected: {'03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk185', '05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk198', '05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk197', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk187', '03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk186'}
+  [hybrid  ] top=30
+    #1 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk198 ← ✅
+    #2 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk186 ← ✅
+    #3 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk188
+    #4 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk187 ← ✅
+    #5 10_UPS5000-E 监控模块 用户手册.pdf_chunk135
+    #6 10_UPS5000-E 监控模块 用户手册.pdf_chunk215
+    #7 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk199
+    #8 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk206
+    #9 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk189
+    #10 10_UPS5000-E 监控模块 用户手册.pdf_chunk214
+    recall@3=0.29 recall@5=0.43 mrr=1.00
+  (改写: '输出开关断开，是什么问题' → '输出开关断开')
+
+Query: 输出开关断开，是什么问题
+Expected: {'18_UPS5000 告警参考.pdf_chunk654', '18_UPS5000 告警参考.pdf_chunk655'}
+  [semantic] top=30
+    #1 18_UPS5000 告警参考.pdf_chunk187
+    #2 18_UPS5000 告警参考.pdf_chunk198
+    #3 18_UPS5000 告警参考.pdf_chunk192
+    #4 18_UPS5000 告警参考.pdf_chunk188
+    #5 18_UPS5000 告警参考.pdf_chunk195
+    #6 18_UPS5000 告警参考.pdf_chunk186
+    #7 18_UPS5000 告警参考.pdf_chunk196
+    #8 18_UPS5000 告警参考.pdf_chunk194
+    #9 18_UPS5000 告警参考.pdf_chunk256
+    #10 18_UPS5000 告警参考.pdf_chunk193
+    recall@3=0.00 recall@5=0.00 mrr=0.08
+
+Query: 输出开关断开，是什么问题
+Expected: {'18_UPS5000 告警参考.pdf_chunk654', '18_UPS5000 告警参考.pdf_chunk655'}
+  [keyword ] top=16
+    #1 18_UPS5000 告警参考.pdf_chunk655 ← ✅
+    #2 18_UPS5000 告警参考.pdf_chunk652
+    #3 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk77
+    #4 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk64
+    #5 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk61
+    #6 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk199
+    #7 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk76
+    #8 17_UPS5000 反灌保护卡 用户手册 (0302080427, 03021KQQ).pdf_chunk14
+    #9 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk63
+    #10 11_UPS5000-E 维护指南.pdf_chunk78
+    recall@3=0.33 recall@5=0.33 mrr=1.00
+
+Query: 输出开关断开，是什么问题
+Expected: {'18_UPS5000 告警参考.pdf_chunk654', '18_UPS5000 告警参考.pdf_chunk655'}
+  [hybrid  ] top=30
+    #1 18_UPS5000 告警参考.pdf_chunk655 ← ✅
+    #2 18_UPS5000 告警参考.pdf_chunk654 ← ✅
+    #3 18_UPS5000 告警参考.pdf_chunk652
+    #4 18_UPS5000 告警参考.pdf_chunk187
+    #5 18_UPS5000 告警参考.pdf_chunk188
+    #6 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk199
+    #7 18_UPS5000 告警参考.pdf_chunk257
+    #8 18_UPS5000 告警参考.pdf_chunk256
+    #9 18_UPS5000 告警参考.pdf_chunk198
+    #10 18_UPS5000 告警参考.pdf_chunk194
+    recall@3=0.67 recall@5=0.67 mrr=1.00
+  (改写: 'UPS5000E工作模式_维修旁路是什么' → 'UPS5000E工作模式_维修旁路')
+
+Query: UPS5000E工作模式_维修旁路是什么
+Expected: {'09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1', '09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk2'}
+  [semantic] top=30
+    #1 09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1 ← ✅
+    #2 11_UPS5000-E 维护指南.pdf_chunk84
+    #3 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk56
+    #4 09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk2 ← ✅
+    #5 11_UPS5000-E 维护指南.pdf_chunk83
+    #6 11_UPS5000-E 维护指南.pdf_chunk85
+    #7 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk57
+    #8 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk165
+    #9 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk58
+    #10 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk71
+    recall@3=0.33 recall@5=0.67 mrr=1.00
+
+Query: UPS5000E工作模式_维修旁路是什么
+Expected: {'09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1', '09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk2'}
+  [keyword ] top=2
+    #1 09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1 ← ✅
+    #2 09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk2 ← ✅
+    recall@3=0.67 recall@5=0.67 mrr=1.00
+
+Query: UPS5000E工作模式_维修旁路是什么
+Expected: {'09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1', '09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk2'}
+  [hybrid  ] top=30
+    #1 09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1 ← ✅
+    #2 09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk2 ← ✅
+    #3 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk58
+    #4 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk56
+    #5 11_UPS5000-E 维护指南.pdf_chunk83
+    #6 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk71
+    #7 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk142
+    #8 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk163
+    #9 11_UPS5000-E 维护指南.pdf_chunk93
+    #10 11_UPS5000-E 维护指南.pdf_chunk94
+    recall@3=0.67 recall@5=0.67 mrr=1.00
+
+Query: 怎么连接出风边柜电源线
+Expected: {'15_UPS5000 上出风边柜 用户手册.pdf_chunk14', '15_UPS5000 上出风边柜 用户手册.pdf_chunk13'}
+  [semantic] top=30
+    #1 15_UPS5000 上出风边柜 用户手册.pdf_chunk14 ← ✅
+    #2 15_UPS5000 上出风边柜 用户手册.pdf_chunk13 ← ✅
+    #3 15_UPS5000 上出风边柜 用户手册.pdf_chunk12
+    #4 15_UPS5000 上出风边柜 用户手册.pdf_chunk15
+    #5 15_UPS5000 上出风边柜 用户手册.pdf_chunk5
+    #6 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk101
+    #7 15_UPS5000 上出风边柜 用户手册.pdf_chunk4
+    #8 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk102
+    #9 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk104
+    #10 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk16
+    recall@3=0.67 recall@5=0.67 mrr=1.00
+
+Query: 怎么连接出风边柜电源线
+Expected: {'15_UPS5000 上出风边柜 用户手册.pdf_chunk14', '15_UPS5000 上出风边柜 用户手册.pdf_chunk13'}
+  [keyword ] top=3
+    #1 15_UPS5000 上出风边柜 用户手册.pdf_chunk14 ← ✅
+    #2 15_UPS5000 上出风边柜 用户手册.pdf_chunk15
+    #3 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk100
+    recall@3=0.33 recall@5=0.33 mrr=1.00
+
+Query: 怎么连接出风边柜电源线
+Expected: {'15_UPS5000 上出风边柜 用户手册.pdf_chunk14', '15_UPS5000 上出风边柜 用户手册.pdf_chunk13'}
+  [hybrid  ] top=30
+    #1 15_UPS5000 上出风边柜 用户手册.pdf_chunk13 ← ✅
+    #2 15_UPS5000 上出风边柜 用户手册.pdf_chunk14 ← ✅
+    #3 15_UPS5000 上出风边柜 用户手册.pdf_chunk15
+    #4 15_UPS5000 上出风边柜 用户手册.pdf_chunk5
+    #5 15_UPS5000 上出风边柜 用户手册.pdf_chunk12
+    #6 15_UPS5000 上出风边柜 用户手册.pdf_chunk7
+    #7 15_UPS5000 上出风边柜 用户手册.pdf_chunk9
+    #8 15_UPS5000 上出风边柜 用户手册.pdf_chunk4
+    #9 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk100
+    #10 15_UPS5000 上出风边柜 用户手册.pdf_chunk11
+    recall@3=0.67 recall@5=0.67 mrr=1.00
+  (改写: 'MDU显示屏接口有哪些' → 'MDU显示屏接口')
+
+Query: MDU显示屏接口有哪些
+Expected: {'07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk84', '07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk83'}
+  [semantic] top=30
+    #1 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk68
+    #2 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk67
+    #3 10_UPS5000-E 监控模块 用户手册.pdf_chunk197
+    #4 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk10
+    #5 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk71
+    #6 10_UPS5000-E 监控模块 用户手册.pdf_chunk42
+    #7 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk128
+    #8 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk66
+    #9 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk119
+    #10 11_UPS5000-E 维护指南.pdf_chunk91
+    recall@3=0.00 recall@5=0.00 mrr=0.06
+
+Query: MDU显示屏接口有哪些
+Expected: {'07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk84', '07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk83'}
+  [keyword ] top=5
+    #1 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk71
+    #2 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk84 ← ✅
+    #3 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk68
+    #4 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk67
+    #5 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk83 ← ✅
+    recall@3=0.33 recall@5=0.67 mrr=0.50
+
+Query: MDU显示屏接口有哪些
+Expected: {'07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk84', '07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk83'}
+  [hybrid  ] top=30
+    #1 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk68
+    #2 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk84 ← ✅
+    #3 10_UPS5000-E 监控模块 用户手册.pdf_chunk42
+    #4 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk71
+    #5 10_UPS5000-E 监控模块 用户手册.pdf_chunk169
+    #6 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk65
+    #7 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk66
+    #8 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk79
+    #9 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk10
+    #10 10_UPS5000-E 监控模块 用户手册.pdf_chunk168
+    recall@3=0.33 recall@5=0.33 mrr=0.50
+
+Query: 母线电压未升起，UPS整流器无法工作
+Expected: {'07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk178', '11_UPS5000-E 维护指南.pdf_chunk67', '18_UPS5000 告警参考.pdf_chunk308'}
+  [semantic] top=30
+    #1 18_UPS5000 告警参考.pdf_chunk300
+    #2 18_UPS5000 告警参考.pdf_chunk301
+    #3 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk176
+    #4 11_UPS5000-E 维护指南.pdf_chunk67 ← ✅
+    #5 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk186
+    #6 18_UPS5000 告警参考.pdf_chunk361
+    #7 18_UPS5000 告警参考.pdf_chunk299
+    #8 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk155
+    #9 18_UPS5000 告警参考.pdf_chunk364
+    #10 11_UPS5000-E 维护指南.pdf_chunk66
+    recall@3=0.00 recall@5=0.17 mrr=0.25
+
+Query: 母线电压未升起，UPS整流器无法工作
+Expected: {'07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk178', '11_UPS5000-E 维护指南.pdf_chunk67', '18_UPS5000 告警参考.pdf_chunk308'}
+  [keyword ] top=0
+    recall@3=0.00 recall@5=0.00 mrr=0.00
+
+Query: 母线电压未升起，UPS整流器无法工作
+Expected: {'07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk178', '11_UPS5000-E 维护指南.pdf_chunk67', '18_UPS5000 告警参考.pdf_chunk308'}
+  [hybrid  ] top=30
+    #1 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk155
+    #2 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk156
+    #3 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk178 ← ✅
+    #4 11_UPS5000-E 维护指南.pdf_chunk67 ← ✅
+    #5 18_UPS5000 告警参考.pdf_chunk308 ← ✅
+    #6 18_UPS5000 告警参考.pdf_chunk301
+    #7 18_UPS5000 告警参考.pdf_chunk300
+    #8 11_UPS5000-E 维护指南.pdf_chunk66
+    #9 18_UPS5000 告警参考.pdf_chunk364
+    #10 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk186
+    recall@3=0.17 recall@5=0.50 mrr=0.33
+
+Query: 支脚机柜2400*850（四柜）的底座是如何并联的
+Expected: {'14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk13', '14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk2'}
+  [semantic] top=30
+    #1 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk13 ← ✅
+    #2 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk17
+    #3 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk11
+    #4 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk12
+    #5 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk16
+    #6 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk18
+    #7 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk10
+    #8 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk14
+    #9 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk22
+    #10 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk15
+    recall@3=0.33 recall@5=0.33 mrr=1.00
+
+Query: 支脚机柜2400*850（四柜）的底座是如何并联的
+Expected: {'14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk13', '14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk2'}
+  [keyword ] top=0
+    recall@3=0.00 recall@5=0.00 mrr=0.00
+
+Query: 支脚机柜2400*850（四柜）的底座是如何并联的
+Expected: {'14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk13', '14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk2'}
+  [hybrid  ] top=30
+    #1 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk2 ← ✅
+    #2 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk13 ← ✅
+    #3 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk17
+    #4 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk4
+    #5 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk1
+    #6 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk11
+    #7 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk21
+    #8 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk18
+    #9 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk22
+    #10 14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk12
+    recall@3=0.67 recall@5=0.67 mrr=1.00
+
+Query: 电池冷启动操作步骤
+Expected: {'07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk73', '07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk164'}
+  [semantic] top=30
+    #1 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk26
+    #2 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk36
+    #3 11_UPS5000-E 维护指南.pdf_chunk18
+    #4 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk159
+    #5 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk35
+    #6 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk158
+    #7 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk164 ← ✅
+    #8 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk168
+    #9 10_UPS5000-E 监控模块 用户手册.pdf_chunk201
+    #10 11_UPS5000-E 维护指南.pdf_chunk92
+    recall@3=0.00 recall@5=0.00 mrr=0.14
+
+Query: 电池冷启动操作步骤
+Expected: {'07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk73', '07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk164'}
+  [keyword ] top=6
+    #1 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk164 ← ✅
+    #2 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk158
+    #3 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk136
+    #4 11_UPS5000-E 维护指南.pdf_chunk92
+    #5 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk159
+    #6 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk137
+    recall@3=0.33 recall@5=0.33 mrr=1.00
+
+Query: 电池冷启动操作步骤
+Expected: {'07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk73', '07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk164'}
+  [hybrid  ] top=30
+    #1 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk164 ← ✅
+    #2 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk159
+    #3 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk136
+    #4 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk158
+    #5 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk137
+    #6 07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk36
+    #7 03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk26
+    #8 05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk28
+    #9 11_UPS5000-E 维护指南.pdf_chunk18
+    #10 09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk12
+    recall@3=0.33 recall@5=0.33 mrr=1.00
+
+============================================================
+  AGGREGATE METRICS (top_k=30+reranker)
+============================================================
+
+Mode: semantic
+  recall@ 1=0.164 precision@ 1=0.500 ndcg@ 1=0.500
+  recall@ 3=0.232 precision@ 3=0.267 ndcg@ 3=0.563
+  recall@ 5=0.282 precision@ 5=0.200 ndcg@ 5=0.594
+  recall@10=0.364 precision@10=0.140 ndcg@10=0.611
+  recall@20=0.515 precision@20=0.100 ndcg@20=0.635
+  recall@30=0.531 precision@30=0.070 ndcg@30=0.635
+  recall@50=0.531 precision@50=0.042 ndcg@50=0.635
+  mrr=0.604
+
+Mode: keyword
+  recall@ 1=0.148 precision@ 1=0.500 ndcg@ 1=0.500
+  recall@ 3=0.293 precision@ 3=0.333 ndcg@ 3=0.626
+  recall@ 5=0.326 precision@ 5=0.220 ndcg@ 5=0.625
+  recall@10=0.326 precision@10=0.110 ndcg@10=0.625
+  recall@20=0.326 precision@20=0.055 ndcg@20=0.625
+  recall@30=0.326 precision@30=0.037 ndcg@30=0.625
+  recall@50=0.326 precision@50=0.022 ndcg@50=0.625
+  mrr=0.600
+
+Mode: hybrid
+  recall@ 1=0.251 precision@ 1=0.800 ndcg@ 1=0.800
+  recall@ 3=0.469 precision@ 3=0.533 ndcg@ 3=0.913
+  recall@ 5=0.516 precision@ 5=0.380 ndcg@ 5=0.922
+  recall@10=0.536 precision@10=0.200 ndcg@10=0.915
+  recall@20=0.565 precision@20=0.110 ndcg@20=0.905
+  recall@30=0.598 precision@30=0.077 ndcg@30=0.893
+  recall@50=0.598 precision@50=0.046 ndcg@50=0.893
+  mrr=0.883

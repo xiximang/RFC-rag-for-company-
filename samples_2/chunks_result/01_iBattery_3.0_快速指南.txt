@@ -1,0 +1,848 @@
+文件: 01_iBattery 3.0 快速指南.pdf
+Chunks: 17
+============================================================
+
+--- Chunk 0 (length=934) ---
+[TABLE]
+名称 | 型号 | 功能 | 说明
+iBOX | iBOX | 电池智能管理模块 | 一个iBOX最多支持接入200个iBAT，
+最多可管理4个电池组的iBAT。
+iBAT | iBAT-12V | 12V电池智能检测模块 | 支持12V电源输入，负责检测电池的
+电压、内阻和极柱温度。
+适配器 | POE35-
+54A | iBOX供电电源 | -
+HALL传感器 | - | 检测电池电流 | 一个iBOX最多支持接入8个。
+[/TABLE]
+
+[TABLE]
+UPS场景 | ECC场景 | NetEco场景
+ |  | 
+为为保保证证无无线线通通信信信信号号无无干干扰扰，，
+iiBBOOXX与与iiBBAATT之之间间距距离离不不大大于于
+1155mm。。 | 为保证iBOX与iBAT之间无线
+通信信号无干扰，多个电池柜
+并柜时，相邻的侧板需要拆除。 | 如果机房交换机有POE端口，
+则无需安装适配器。
+[/TABLE]
+
+iBattery 3.0
+快速指南
+文档版本：06
+纸件编码：31509755
+发布日期：2025-10-30
+版权所有 华为数字能源技术有限公司2025。保留一切权利。
+1 产品简介 ©
+iBOX iBAT 适配器 HALL
+名称 型号 功能 说明
+iBOX iBOX 电池智能管理模块 一个iBOX最多支持接入200个iBAT，
+最多可管理4个电池组的iBAT。
+iBAT iBAT-12V 12V电池智能检测模块 支持12V电源输入，负责检测电池的
+电压、内阻和极柱温度。
+适配器 POE35- iBOX供电源 -
+54A
+HALL传感器 - 检测电池电流 一个iBOX最多支持接入8个。
+UPS场景 ECC场景 NetEco场景
+为保证无线通信号无干扰，， 为保证iBOX与iBAT之间无线 如果机房交换机有POE端口，
+iiBBOOXX与iiBBAATT之间距离不大于 通信号无干扰，多个电池柜 则无需安装适配器。
+1155mm。。 并柜时，相邻的侧板需要拆除。
+1
+
+[TABLE]
+2.1 |  | 安装iBAT
+[/TABLE]
+
+[TABLE]
+2.2 |  | 安装霍尔传感器
+[/TABLE]
+
+--- Chunk 1 (length=665) ---
+装适配器。
+1155mm。。 并柜时，相邻的侧板需要拆除。
+1
+
+[TABLE]
+2.1 |  | 安装iBAT
+[/TABLE]
+
+[TABLE]
+2.2 |  | 安装霍尔传感器
+[/TABLE]
+
+2 安装设备
+2.1 安装iBAT
+• 电池组存在大电流、危险电压，必须使用绝缘工具，佩戴绝缘手套，避免接触短路造成人身伤害。
+• iBAT红色线缆是正极，黑色线缆是负极，正负极不能接反。
+• 安装好产品后，如果超过30天不给电池充电时，建议将iBAT产品从电池线缆拔出。
+• 扭矩：M6：4N·m～6N·m M8：13N·m～15N·m M10：15N·m～20N·m
+• 安装iBAT时确保端子可见。需要并行组网操作的，安装线缆后，待将iBAT SN信息采集完后再安
+装iBAT。
+• 电池接入系统前禁止给iBAT上电。
+• 禁止将iBAT安装到阀式铅酸电池的出气阀上。
+1. 断开电池组开关，安装iBAT线缆到电池极柱上。 2. 将端子用力卡入iBAT接口，确保连接牢固。
+3. 根据电池安装空间，将iBAT粘贴到电池顶
+部或侧面。粘贴时用手掌按压10s以上，确
+保粘贴牢固、受力均匀。
+螺栓
+弹垫
+平垫
+OT端子
+电池连接件
+2.2 安装霍尔传感器
+• 安装霍尔传感器。如果电池组有N线系统，则正、负极线缆各安装一个霍尔传感器。如果电池组无N
+线系统，仅在正极（或负极）线缆上安装一个霍尔传感器。
+• 霍尔传感器箭头方向与电池充电时电流方向保持一致。
+• 当一组电池的正（负）极有多根线缆时，需接入多个霍尔传感器。
+2
+
+--- Chunk 2 (length=712) ---
+尔传感器。如果电池组无N
+线系统，仅在正极（或负极）线缆上安装一个霍尔传感器。
+• 霍尔传感器箭头方向与电池充电时电流方向保持一致。
+• 当一组电池的正（负）极有多根线缆时，需接入多个霍尔传感器。
+2
+
+[TABLE]
+线缆标签 | iBOX端口
+Battery1+_HAL
+L1 | HALL_1
+Battery1-
+_HALL2 | HALL_2
+Battery2+_HAL
+L3 | HALL_3
+Battery2-
+_HALL4 | HALL_4
+Battery3+_HAL
+L5 | HALL_5
+Battery3-
+_HALL6 | HALL_6
+Battery4+_HAL
+L7 | HALL_7
+Battery4-
+_HALL8 | HALL_8
+[/TABLE]
+
+[TABLE]
+线缆标签 | iBOX端口
+Battery1+_HAL
+L1 | HALL_1
+Battery1+_HAL
+L2 | HALL_2
+Battery1-
+_HALL3 | HALL_3
+Battery1-
+_HALL4 | HALL_4
+Battery2+_HAL
+L5 | HALL_5
+Battery2+_HAL
+L6 | HALL_6
+Battery2-
+_HALL7 | HALL_7
+Battery2-
+_HALL8 | HALL_8
+[/TABLE]
+
+[TABLE]
+线缆标签 | iBOX端口
+Battery1_HALL
+1 | HALL_1
+Battery2_HAL
+L2 | HALL_2
+Battery3_HAL
+L3 | HALL_3
+Battery4_HAL
+L4 | HALL_4
+[/TABLE]
+
+--- Chunk 3 (length=619) ---
+_HALL
+1 | HALL_1
+Battery2_HAL
+L2 | HALL_2
+Battery3_HAL
+L3 | HALL_3
+Battery4_HAL
+L4 | HALL_4
+[/TABLE]
+
+有N线系统
+线缆标签 iBOX端口
+Battery1+_HAL
+HALL_1
+L1
+Battery1-HALL_2
+_HALL2
+Battery2+_HAL
+HALL_3
+L3
+Battery2-HALL_4
+_HALL4
+Battery3+_HAL
+HALL_5
+L5
+Battery3-HALL_6
+_HALL6
+Battery4+_HAL
+HALL_7
+L7
+Battery4-HALL_8
+_HALL8
+线缆标签 iBOX端口
+Battery1+_HAL
+HALL_1
+L1
+Battery1+_HAL
+HALL_2
+L2
+Battery1-HALL_3
+_HALL3
+Battery1-HALL_4
+_HALL4
+Battery2+_HAL
+HALL_5
+L5
+Battery2+_HAL
+HALL_6
+L6
+无N线系统 Battery2-HALL_7
+_HALL7
+Battery2-HALL_8
+_HALL8
+线缆标签 iBOX端口
+Battery1_HALL
+HALL_1
+1
+Battery2_HAL
+HALL_2
+L2
+Battery3_HAL
+HALL_3
+L3
+Battery4_HAL
+HALL_4
+L4
+3
+
+--- Chunk 4 (length=836) ---
+iBOX端口
+Battery1_HALL
+HALL_1
+1
+Battery2_HAL
+HALL_2
+L2
+Battery3_HAL
+HALL_3
+L3
+Battery4_HAL
+HALL_4
+L4
+3
+
+[TABLE]
+线缆标签 | iBOX端口
+Battery1_HALL
+1 | HALL_1
+Battery1_HALL
+2 | HALL_2
+Battery2_HALL
+3 | HALL_3
+Battery2_HALL
+4 | HALL_4
+Battery3_HALL
+5 | HALL_5
+Battery3_HALL
+6 | HALL_6
+Battery4_HALL
+7 | HALL_7
+Battery4_HALL
+8 | HALL_8
+[/TABLE]
+
+[TABLE]
+2.3 | 安装iBOX
+[/TABLE]
+
+线缆标签 iBOX端口
+Battery1_HALL
+HALL_1
+1
+Battery1_HALL
+HALL_2
+2
+Battery2_HALL
+HALL_3
+3
+Battery2_HALL
+HALL_4
+4
+Battery3_HALL
+HALL_5
+5
+Battery3_HALL
+HALL_6
+6
+Battery4_HALL
+HALL_7
+7
+Battery4_HALL
+HALL_8
+8
+标有Hall+、Hall-、Hall_1、Hall_2的线缆，标有Hall+的端子接到正极的霍尔上，标有Hall-的端子接到负极的霍尔上，标有Hall_1、Hall_2的端子按照接线顺序分别接到iBOX的对应端口
+上。
+2.3 安装iBOX
+UPS场景
+iBOX
+1. 安装iBOX的自带天线，天线方向要垂直
+于地面。
+2. 将iBOX粘贴到BCB-BOX顶部或侧面，
+并用手掌按压10s以上，确保固定件粘贴
+iBOX 牢固、受力均匀。
+iBOX需要安装在对应的BCB-BOX上。
+4
+
+[TABLE]
+2.4 |  | 安装适配器
+[/TABLE]
+
+--- Chunk 5 (length=888) ---
+BOX顶部或侧面，
+并用手掌按压10s以上，确保固定件粘贴
+iBOX 牢固、受力均匀。
+iBOX需要安装在对应的BCB-BOX上。
+4
+
+[TABLE]
+2.4 |  | 安装适配器
+[/TABLE]
+
+ECC场景
+1. 拆除电池柜面板，将面板上iBOX指示灯对应孔位的盖板敲除。
+2. 安装iBOX的自带天线，天线方向要垂直于地面。
+3. 将固定件粘贴到固定架的限位框里，用手掌按压10s以上，确保固定件粘贴牢固、受力均匀。
+4. 将iBOX卡接在固定件上，确保安装到位，连接紧固。
+BIB
+霍尔传感器 iBOX 电池柜
+2.4 安装适配器
+根据现场实际布局，选择恰当的适配器安装位置。
+请用户自备ST3.5×35自攻螺钉、垫片和M6×30塑料膨胀管。
+自攻螺钉
+垫片
+塑料膨
+胀管
+5
+
+[TABLE]
+3.1 |  | 连接线缆
+[/TABLE]
+
+[TABLE]
+引脚 | POE口定义 | COM口定义
+1 | TX+ | RS485+
+2 | TX- | RS485-
+3 | RX+ | NC
+4 | 48V+ | RS485+
+5 | 48V+ | RS485-
+6 | RX-/GND | GND
+7 | 48V- | NC
+8 | 48V- | NC
+[/TABLE]
+
+3 接线和调测（UPS场景）
+3.1 连接线缆
+线缆制作
+• POE口和COM口都是RJ45直通线
+引脚 POE口定义 COM口定义
+• 请用户自备线缆和端子
+1 TX+ RS485+
+2 TX- RS485-3 RX+ NC
+4 48V+ RS485+
+5 48V+ RS485-6 RX-/GND GND
+7 48V- NC
+8 48V- NC
+1台UPS配1个iBOX管理4组电池
+6
+1台UPS配4个iBOX分别管理4组电池
+请务必按图所示设置iBOX拨码，iBOX1~iBOX4拨码在管理系统中的地址分别为60~63。
+7
+
+[TABLE]
+3.2 | 登录iBOXWeb设置参数
+[/TABLE]
+
+[TABLE]
+3.3 | 登录UPS Web设置参数
+[/TABLE]
+
+--- Chunk 6 (length=675) ---
+X4拨码在管理系统中的地址分别为60~63。
+7
+
+[TABLE]
+3.2 | 登录iBOXWeb设置参数
+[/TABLE]
+
+[TABLE]
+3.3 | 登录UPS Web设置参数
+[/TABLE]
+
+3.2 登录iBOXWeb设置参数
+1. 将电脑和iBOX配置到同一网段。
+2. 使用直通网线连接电脑和适配器的DATA接口。
+3. 打开IE浏览器，选择“工具 > Internet选项 > 高级”，确认已
+勾选“使用TLS 1.1”和“使用TLS 1.2”。
+4. 在IE浏览器输入“https://iBOX的IP地址”，登录iBOX Web
+主页面。
+iBOX出厂预设值：
+• IP地址：192.168.0.10 • 用户名：admin
+• 子网掩码： • 密码：Changeme
+255.255.255.0
+• 网关：192.168.0.1
+5. 在iBOXWeb主页面，选择“系统设置 > 电池曲线”。
+6. 在电池曲线界面，选择需设置的电池组，输入电池品牌和型号规格，点击“筛选 > 提交”，完成设
+置。
+*界面图示以iBOX软件版本V296B019为例
+3.3 登录UPS Web设置参数
+1. 使用直通网线连接电脑和UPS MDU的FE接口。
+2. 在IE浏览器输入“https://UPS的IP地址”，登录
+UPS Web主页面。 MDU
+UPS出厂预设值：
+• IP地址：192.168.0.10 • 用户名：admin
+• 子网掩码：255.255.255.0 • 密码：Changeme
+• 网关：192.168.0.1
+8
+
+--- Chunk 7 (length=646) ---
+ MDU
+UPS出厂预设值：
+• IP地址：192.168.0.10 • 用户名：admin
+• 子网掩码：255.255.255.0 • 密码：Changeme
+• 网关：192.168.0.1
+8
+
+[TABLE]
+文中以ECC800为例，EIC800场景参考ECC800场景进行操作。 | 
+4.1 连 | 接线缆
+[/TABLE]
+
+[TABLE]
+BCB-BOX的通信线缆，带RJ45端子的线缆用于连接新BIB板，不带RJ45端子的线缆连接旧BIB板。
+旧BIB板
+[/TABLE]
+
+[TABLE]
+BIB J1口 | iBOXBCB口
+5 OL | OL
+6 STA | STA
+7 DRV | DRV
+8 GND | GND
+[/TABLE]
+
+3. 在UPS Web主页面，选择“参数设置 > 电池参数设置”，设置“电池组数”。
+4. 在UPS Web主页面，选择“iBOX设置”，设置“基本参数”、“高级参数”、“电池组配置”。
+配置BCB-BOX的场景，需要将“电池异常BCB脱扣”设置为“使能”。
+4 接线和调测（EIC800或ECC800场景）
+文中以ECC800为例，EIC800场景参考ECC800场景进行操作。
+4.1 连接线缆
+BCB-BOX的通信线缆，带RJ45端子的线缆用于连接新BIB板，不带RJ45端子的线缆连接旧BIB板。
+旧BIB板
+BIB J1口 iBOXBCB口
+5 OL OL
+6 STA STA
+7 DRV DRV
+8 GND GND
+9
+
+--- Chunk 8 (length=655) ---
+J45端子的线缆用于连接新BIB板，不带RJ45端子的线缆连接旧BIB板。
+旧BIB板
+BIB J1口 iBOXBCB口
+5 OL OL
+6 STA STA
+7 DRV DRV
+8 GND GND
+9
+
+[TABLE]
+BIB J1口 | iBOXBCB口
+5 OL | OL
+6 STA | STA
+7 DRV | DRV
+8 GND | GND
+[/TABLE]
+
+[TABLE]
+4.2 | 登录ECC800 Web设置参数 |  | 
+ |  |  | ECC800 出厂预设值：
+• IP地址：192.168.0.10
+• 子网掩码：255.255.255.0
+• 网关：192.168.0.1
+• 用户名：admin
+• 密码：Changeme
+设置参数 |  | 设置说明 | 备注
+iBOX单节电池数
+量 |  | iBOX下实际监控的单节电池总数量。 | 根据客户规划的电池参数进行设置。
+电池安装时间 |  | 电池的实际安装时间。 | -
+电池组总容量 |  | 设置值为单节电池容量。 | 电池容量可从电池单体的丝印上获取。
+电流获取源 |  | 选择设置xxxA档霍尔。 | 以霍尔传感器的实际规格为准。
+电池异常BCB脱扣 |  | 配置有BCB-BOX时，设置为“使
+能”。 | -
+电池组号 |  | 根据iBOX和电池组的规划编码进行设
+置。一个UPS下的电池组号不能相同。 | 根据客户的规划设置。
+[/TABLE]
+
+[TABLE]
+5.1 | 连接线缆
+[/TABLE]
+
+--- Chunk 9 (length=770) ---
+-
+电池组号 |  | 根据iBOX和电池组的规划编码进行设
+置。一个UPS下的电池组号不能相同。 | 根据客户的规划设置。
+[/TABLE]
+
+[TABLE]
+5.1 | 连接线缆
+[/TABLE]
+
+新BIB板
+BIB J1口 iBOXBCB口
+5 OL OL
+6 STA STA
+7 DRV DRV
+8 GND GND
+4.2 登录ECC800 Web设置参数
+1. 使用直通网线连接电脑和ECC800的FE接口。
+ECC800 出厂预设值：
+2. 在IE浏览器输入“https://ECC800的IP地址”，登录
+ECC800 Web主页面。 • IP地址：192.168.0.10
+3. 进入“实时监控> 配电> iBOXn> 运行参数”界面， • 子网掩码：255.255.255.0
+参考下表设置电池参数。 • 网关：192.168.0.1
+• 用户名：admin
+• 密码：Changeme
+设置参数 设置说明 备注
+iBOX单节电池数 iBOX下实际监控的单节电池总数量。 根据客户规划的电池参数进行设置。
+量
+电池安装时间 电池的实际安装时间。 -
+电池组总容量 设置值为单节电池容量。 电池容量可从电池单体的丝印上获取。
+电流获取源 选择设置xxxA档霍尔。 以霍尔传感器的实际规格为准。
+电池异常BCB脱扣 配置有BCB-BOX时，设置为“使 -
+能”。
+电池组号 根据iBOX和电池组的规划编码进行设 根据客户的规划设置。
+置。一个UPS下的电池组号不能相同。
+5 接线和调测（NetEco场景）
+5.1 连接线缆
+场景①：交换机带POE功能时，iBOX通过POE口直接连接交换机，不需要安装iBOX适配器。
+场景②：交换机无POE功能时，iBOX通过POE口从适配器取电，通过适配器DATA口与交换机通信。
+10
+
+--- Chunk 10 (length=967) ---
+
+场景①：交换机带POE功能时，iBOX通过POE口直接连接交换机，不需要安装iBOX适配器。
+场景②：交换机无POE功能时，iBOX通过POE口从适配器取电，通过适配器DATA口与交换机通信。
+10
+
+[TABLE]
+BIB J1口 | iBOXBCB口
+5 OL | OL
+6 STA | STA
+7 DRV | DRV
+8 GND | GND
+[/TABLE]
+
+[TABLE]
+BIB J1口 | iBOXBCB口
+5 OL | OL
+6 STA | STA
+7 DRV | DRV
+8 GND | GND
+[/TABLE]
+
+BCB-BOX的通信线缆，带RJ45端子的线缆用于连接新BIB板，不带RJ45端子的线缆连接旧
+BIB板。
+旧BIB板
+BIB J1口 iBOXBCB口
+5 OL OL
+6 STA STA
+7 DRV DRV
+8 GND GND
+新BIB板
+BIB J1口 iBOXBCB口
+5 OL OL
+6 STA STA
+7 DRV DRV
+8 GND GND
+11
+
+[TABLE]
+5.2 | 登录iBOXWeb设置参数
+[/TABLE]
+
+[TABLE]
+电池组配置 | 设置说明
+电流获取源 | 以霍尔传感器的实际规格为准
+电池N线 | 根据实际情况，设置是否存在电池N线
+单组电池霍尔个数 | 单组电池连接的霍尔传感器数量
+单节电池容量 | 串联在电池组中每一节电池的容量值
+电池安装时间 | 电池首次安装的时间
+iBAT数量 | 此iBOX管理的iBAT总数
+电池组数 | 此iBOX管理的电池组总数
+电池组号 | 多个iBOX并联时，并联在一起的iBOX的电池组号不能重复
+[/TABLE]
+
+[TABLE]
+运行参数 | 设置说明
+并联通信配置 | 单个iBOX无需设置。多个iBOX并联时，设置“iBOX是否直接和网管通信”为
+“是”，设置“每台UPS下面配置的iBOX数量”后，设置每个iBOX的IP
+Modbus配置 | ModbusTCP加密、ModbusTCP认证与NetEco网管上的“连接模式”对应
+一致
+基本信息 | 配置有BCB时需要设置BCB配置为有，并将电池异常BCB脱扣设置为允许
+霍尔反接配置 | 如果霍尔传感器有装反的情况，可以通过设置反接来校正
+[/TABLE]
+
+--- Chunk 11 (length=792) ---
+上的“连接模式”对应
+一致
+基本信息 | 配置有BCB时需要设置BCB配置为有，并将电池异常BCB脱扣设置为允许
+霍尔反接配置 | 如果霍尔传感器有装反的情况，可以通过设置反接来校正
+[/TABLE]
+
+[TABLE]
+系统设置 | 设置说明
+系统时间 | 设置本地时区、日期和时间
+IP地址 | 根据管理员分配的IP设置iBOX的IP地址、子网掩码、默认网关
+电池曲线 | 根据电池品牌和型号规格信息设置电池曲线
+并行组网配置 | 并行组网操作时需要设置
+[/TABLE]
+
+5.2 登录iBOXWeb设置参数
+1.将电脑和iBOX配置到同一网段。2.使用直通网线连接电脑和适配器的DATA接口。3.打开IE浏览器，选择“工具 > Internet选项 > 高级”，确认已勾选
+“使用TLS 1.1”和“使用TLS 1.2”。4.在IE浏览器输入“https://iBOX的IP地址”，登录iBOXWeb主页面。iBOX出厂预设值：
+• IP地址：192.168.0.10 • 用户名：admin
+• 子网掩码： • 密码：Changeme
+255.255.255.0
+• 网关：192.168.0.1
+5.进入“系统设置> 电池组配置”界面，根据下表设置“电池组配置”。电池组配置 设置说明
+电流获取源 以霍尔传感器的实际规格为准
+电池N线 根据实际情况，设置是否存在电池N线
+单组电池霍尔个数 单组电池连接的霍尔传感器数量
+单节电池容量 串联在电池组中每一节电池的容量值
+电池安装时间 电池首次安装的时间
+iBAT数量 此iBOX管理的iBAT总数
+电池组数 此iBOX管理的电池组总数
+电池组号 多个iBOX并联时，并联在一起的iBOX的电池组号不能重复
+6.进入“系统设置> 运行参数”界面，根据下表设置“运行参数”。运行参数 设置说明
+并联通信配置 单个iBOX无需设置。
+
+--- Chunk 12 (length=1192) ---
+池组总数
+电池组号 多个iBOX并联时，并联在一起的iBOX的电池组号不能重复
+6.进入“系统设置> 运行参数”界面，根据下表设置“运行参数”。运行参数 设置说明
+并联通信配置 单个iBOX无需设置。
+
+多个iBOX并联时，设置“iBOX是否直接和网管通信”为
+“是”，设置“每台UPS下面配置的iBOX数量”后，设置每个iBOX的IP
+Modbus配置 ModbusTCP加密、ModbusTCP认证与NetEco网管上的“连接模式”对应
+一致
+基本信息 配置有BCB时需要设置BCB配置为有，并将电池异常BCB脱扣设置为允许
+霍尔反接配置 如果霍尔传感器有装反的情况，可以通过设置反接来校正
+7.进入“系统设置”界面，根据下表完成“系统时间”、“IP地址”、“电池曲线”和“并行组网
+配置”设置。系统设置 设置说明
+系统时间 设置本地时区、日期和时间
+IP地址 根据管理员分配的IP设置iBOX的IP地址、子网掩码、默认网关
+电池曲线 根据电池品牌和型号规格信息设置电池曲线
+并行组网配置 并行组网操作时需要设置
+12
+
+[TABLE]
+5.3 | 登录NetEco设置参数
+[/TABLE]
+
+[TABLE]
+BOX参数：
+ModbusTCP加密”
+“ModbusTCP认证” | NetEco参数：
+连接模式
+止 | 非SSL连接
+能 | SSL连接
+[/TABLE]
+
+5.3 登录NetEco设置参数
+1. 在IE浏览器输入“https://NetEco的IP地址”，登录 NetEco界面
+NetEco主页面。
+2. 进入“配置>组态设计”界面，选中iBOX所在的站点。
+3. 选择“设备>电池巡检仪”，拖动电池巡检仪图标到创建区。
+4. 在“管理属性”中设置iBOX的“名称”、“IP地址”、“端
+口”和“连接模式”。
+5. 点击“连接测试”，待提醒连接成功后保存。
+• IP地址：与iBOXIP地址保持一致
+• 端口：设置为502
+• 连接模式：需要与iBOX设置对应一致
+• 多个iBOX时，每个iBOX都需要在NetEco上设置
+iBOX参数： NetEco参数：
+“ModbusTCP加密” 连接模式
+和“ModbusTCP认证”
+禁止 非SSL连接
+使能 SSL连接
+6 iBOX与iBAT组网
+组网开关 ALM指示灯RF_Z指示灯 组网开关 RUN/ALM指示灯
+• 为避免不同组的iBAT发生错误接入其余iBOX，组网时，只能有一个iBOX处于网络组建状态，
+即该iBOX的RF_Z指示灯处于超快闪状态。
+• iBAT接入iBOX的顺序决定了iBOX中对电池管理的编号，建议按照电池线缆的连接顺序从电池
+组正极开始逐一接入iBAT。
+• 组网过程中，禁止操作组网按钮，否则会导致组网失败。
+13
+
+[TABLE]
+7.1 | 安装后检查
+[/TABLE]
+
+--- Chunk 13 (length=637) ---
+电池管理的编号，建议按照电池线缆的连接顺序从电池
+组正极开始逐一接入iBAT。
+• 组网过程中，禁止操作组网按钮，否则会导致组网失败。
+13
+
+[TABLE]
+7.1 | 安装后检查
+[/TABLE]
+
+[TABLE]
+序号 | 检查项目 | 验收标准 | 检查结果
+1 | iBattery系统设备是否安装到
+位。 | iBattery系统所有设备已可靠安装到位。 | 口合格
+口不合格
+2 | iBattery系统POE接口的线
+缆、COM接口的线缆、BCB
+接口的线缆和HALL电流检测
+接口的线缆的标签是否清晰、
+准确。 | iBattery系统相关线缆已正确连接。线缆两头都
+需要标记，标签上标注要简洁易懂。 | 口合格
+口不合格
+3 | iBattery系统POE接口的线
+缆、COM接口的线缆、BCB
+接口的线缆和HALL电流检测
+接口的线缆连接是否紧固。 | iBattery系统相关线缆已连接牢靠可靠。所有线
+缆连接处都不能够有松动，螺钉紧固需确保弹垫
+压平，防止发生脱落或者发生安全事故，确保连
+线不存在断路及隐患点。 | 口合格
+口不合格
+4 | 检查iBOX拨码开关。 | iBOX的拨码开关已正确设置。 | 口合格
+口不合格
+5 | iBAT输入正、负极是否接反。 | 用万用表测量iBAT正、负极之间的电压是否正确 | 。口合格
+口不合格
+6 | 检查运行环境。 | 清理安装环境中的导电性粉尘及其他杂物。 | 口合格
+口不合格
+[/TABLE]
+
+--- Chunk 14 (length=679) ---
+、负极是否接反。 | 用万用表测量iBAT正、负极之间的电压是否正确 | 。口合格
+口不合格
+6 | 检查运行环境。 | 清理安装环境中的导电性粉尘及其他杂物。 | 口合格
+口不合格
+[/TABLE]
+
+1.检查所有iBOX的RF_Z指示灯为绿色常亮，否则需长按组网开关10~20s清除原有网络。2.检查iBAT的RUN/ALM指示灯为红色常亮，否则需长按组网开关5s以上清除原有网络。3.短按2s iBOX的组网开关，ALM指示灯红色“闪烁一次”，RF_Z指示灯由绿色“常亮”变为绿
+色“超快闪”状态，iBOX处于网络组建状态。4.短按2s iBAT的组网开关，RUN/ALM指示灯由红色“常亮”变成绿色“快闪”，最后变成绿色
+“慢闪”，表示iBAT已成功组到iBOX网络中。5.重复上一步，逐一将iBAT加入到iBOX网络中。6.短按2s iBOX的组网开关，iBOX的RF_Z指示灯由绿色“超快闪”变成绿色“慢闪”状态，组网
+完成。组网完成后若iBOX的ALM指示灯常亮，表示实际在线iBAT小于“iBAT数量”，请检查设置的
+“iBAT数量”是否正确，iBAT是否成功组网（RUN/ALM指示灯为绿色“慢闪”状态）。7 附录
+7.1 安装后检查
+序号 检查项目 验收标准 检查结果
+1 iBattery系统设备是否安装到 iBattery系统所有设备已可靠安装到位。口合格
+位。口不合格
+2 iBattery系统POE接口的线 iBattery系统相关线缆已正确连接。线缆两头都 口合格
+缆、COM接口的线缆、BCB 需要标记，标签上标注要简洁易懂。
+
+--- Chunk 15 (length=790) ---
+已可靠安装到位。口合格
+位。口不合格
+2 iBattery系统POE接口的线 iBattery系统相关线缆已正确连接。线缆两头都 口合格
+缆、COM接口的线缆、BCB 需要标记，标签上标注要简洁易懂。
+
+口不合格
+接口的线缆和HALL电流检测
+接口的线缆的标签是否清晰、
+准确。3 iBattery系统POE接口的线 iBattery系统相关线缆已连接牢靠可靠。所有线 口合格
+缆、COM接口的线缆、BCB 缆连接处都不能够有松动，螺钉紧固需确保弹垫 口不合格
+接口的线缆和HALL电流检测 压平，防止发生脱落或者发生安全事故，确保连
+接口的线缆连接是否紧固。线不存在断路及隐患点。4 检查iBOX拨码开关。iBOX的拨码开关已正确设置。口合格
+口不合格
+5 iBAT输入正、负极是否接反。用万用表测量iBAT正、负极之间的电压是否正确。口合格
+口不合格
+6 检查运行环境。清理安装环境中的导电性粉尘及其他杂物。口合格
+口不合格
+14
+
+[TABLE]
+7.2 指 | 示灯定义
+[/TABLE]
+
+[TABLE]
+iBOX指示灯 | 颜色 | 含义 | 状态 | 说明
+PWR | 绿色 | 电源指示灯 | 常亮 | 单板电源指示灯
+ALM | 红色 | 告警指示灯 | 常亮 | 实际在线设备小于iBAT数量
+ |  |  | 常灭 | 实际在线设备等于iBAT数量
+RUN | 绿色 | 北向通信状态 | 慢闪 | 通信正常
+ |  |  | 间断超快闪 | 眨眼功能，持续1min
+ |  |  | 快闪 | 通信失败（持续3min未收到合法北向数据）
+RF_Z | 绿色 | 无线通讯状态 | 常亮 | 无网络参数（等待创建网络）
+ |  |  | 超快闪 | 网络组建状态（允许新节点加入）
+ |  |  | 慢闪 | 数据传输状态（禁止新节点加入）
+[/TABLE]
+
+--- Chunk 16 (length=951) ---
+ | 无线通讯状态 | 常亮 | 无网络参数（等待创建网络）
+ |  |  | 超快闪 | 网络组建状态（允许新节点加入）
+ |  |  | 慢闪 | 数据传输状态（禁止新节点加入）
+[/TABLE]
+
+[TABLE]
+iBAT指示灯 | 颜色 | 含义 | 状态 | 说明
+RUN/ALM | 绿色 | RUN | 常灭 | • 低功耗
+• 未上电状态
+ |  |  | 快闪 | 已启动组网，但组网未完成
+ |  |  | 慢闪 | 组网成功
+ | 红色 | ALM | 常灭 | iBAT无故障
+ |  |  | 快闪 | • 擦除网络参数
+• iBAT正在眨眼
+ |  |  | 常亮 | • iBAT正在测量电池内阻
+• iBAT有故障
+• 与iBOX通讯超时
+• 无网络状态（等待加入网络）
+[/TABLE]
+
+7.2 指示灯定义
+iBOX指示灯 颜色 含义 状态 说明
+PWR 绿色 电源指示灯 常亮 单板电源指示灯
+常亮 实际在线设备小于iBAT数量
+ALM 红色 告警指示灯
+常灭 实际在线设备等于iBAT数量
+慢闪 通信正常
+RUN 绿色 北向通信状态 间断超快闪 眨眼功能，持续1min
+快闪 通信失败（持续3min未收到合法北向数据）
+常亮 无网络参数（等待创建网络）
+RF_Z 绿色 无线通讯状态 超快闪 网络组建状态（允许新节点加入）
+慢闪 数据传输状态（禁止新节点加入）
+iBAT指示灯 颜色 含义 状态 说明
+绿色 RUN 常灭 • 低功耗
+• 未上电状态
+快闪 已启动组网，但组网未完成
+慢闪 组网成功
+红色 ALM 常灭 iBAT无故障
+RUN/ALM
+快闪 • 擦除网络参数
+• iBAT正在眨眼
+常亮 • iBAT正在测量电池内阻
+• iBAT有故障
+• 与iBOX通讯超时
+• 无网络状态（等待加入网络）
+• 慢闪：1s亮、1s灭的闪烁（0.5Hz）
+• 快闪：0.125s亮、0.125s灭的闪烁（4Hz）
+• 超快闪：0.05s亮、0.05s灭的闪烁（10Hz）
+• 间断超快闪：以超快闪0.5s、常灭0.5s的周期运行
+华为数字能源技术有限公司
+深圳市福田区华为数字能源安托山基地
+邮编：518043
+digitalpower.huawei.com
+15
+

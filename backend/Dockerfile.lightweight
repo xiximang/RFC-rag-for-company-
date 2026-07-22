@@ -12,8 +12,8 @@
 FROM python:3.11-slim AS runtime
 
 # 清华源加速（构建期）
-ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple \
-    PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn \
+ENV PIP_INDEX_URL=https://mirrors.cloud.tencent.com/pypi/simple/ \
+    PIP_TRUSTED_HOST=mirrors.cloud.tencent.com \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
@@ -22,7 +22,8 @@ WORKDIR /app
 # 仅安装运行时必要的最小系统包
 # - curl: healthcheck
 # 不需要：gcc / tesseract / poppler / ffmpeg / libsndfile / libreoffice
-RUN apt-get update \
+RUN sed -i 's|http://deb.debian.org|https://mirrors.ustc.edu.cn|g' /etc/apt/sources.list.d/debian.sources \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         ca-certificates \

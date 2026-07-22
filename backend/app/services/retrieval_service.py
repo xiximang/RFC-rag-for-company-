@@ -1,13 +1,17 @@
 import asyncio
+import logging
 from typing import List, Dict, Any, Optional
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+logger = logging.getLogger(__name__)
+
 from app.core.cache import CacheManager
 from app.models.chunk import Chunk
 from app.pipelines.keyword_annotator import LEVEL_ORDER
 from app.retrieval.bm25_client import bm25_client
+from app.retrieval.query_rewriter import rewrite_query
 from app.retrieval.embedding_client import embedding_client
 from app.retrieval.rerank_client import rerank_client
 from app.retrieval.vector_store import get_vector_store
@@ -64,6 +68,14 @@ class RetrievalService:
         timer = time.perf_counter()
         if mode not in {"hybrid", "semantic", "keyword"}:
             mode = "hybrid"
+
+        # 2026-07-21: keyword 模式剥离句尾疑问词/停用词，对齐 eval 改写逻辑。
+        # semantic/hybrid 不改写（语义检索能理解疑问词，剥离反损语义）。
+        if mode == "keyword":
+            rewritten = rewrite_query(query)
+            if rewritten != query:
+                logger.debug("query rewrite: %r -> %r", query, rewritten)
+                query = rewritten
 
         cache = CacheManager()
         perm_service = PermissionService(db, cache)
@@ -204,8 +216,6 @@ class RetrievalService:
         )
 
         # 7. BadCase 监控指标埋点
-        import logging
-        logger = logging.getLogger(__name__)
 
         # 7.1 Rerank 排序变化统计
         if reranked and filtered:

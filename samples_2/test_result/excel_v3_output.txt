@@ -1,0 +1,242 @@
+Chunks 总数: 33
+============================================================
+
+--- Chunk 0 (len=106) ---
+    sheet=封面 Cover type=excel_fulltext
+【封面 Cover】
+
+批准
+Granted By: Huawei Digital Power Technologies Co., Ltd.
+
+批准
+Granted By: All rights reserved
+
+--- Chunk 1 (len=306) ---
+    sheet=修订记录 Revision Record type=excel_fulltext
+【修订记录 Revision Record】
+
+日期
+Date: 2024.09.20; 修订版本
+Revised Version: V1.0; 修改描述
+Modification Description: 首次发布
+First release; 作者/修订人
+Author/Reviser: Jiao Bin 30015507
+
+日期
+Date: 2026.5.27; 修订版本
+Revised V
+
+--- Chunk 2 (len=242) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+产品类型
+Product Type: UPS5000; 机柜宽度 W（mm）
+Cabinet Width (mm): 600; 机柜深度 D（mm）
+Cabinet Depth (mm): 1000; 图纸名称
+Drawing Name: 带滚轮机柜600*1000 Cabinet with castors (600 mm x 1000 mm); 备注
+Remarks: 适配SmartLi 5.0
+
+--- Chunk 3 (len=275) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 600; 机柜深度 D（mm）
+Cabinet Depth (mm): 850; 图纸名称
+Drawing Name: 带滚轮机柜600*850 Cabinet with castors (600 mm x 850 mm); 备注
+Remarks: 适配机柜ups5000-E/S/A-120K-300K Applicable cabin
+
+--- Chunk 4 (len=216) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 600; 机柜深度 D（mm）
+Cabinet Depth (mm): 1000; 图纸名称
+Drawing Name: 支脚机柜600*1000 Cabinet with feet (600 mm x 1000 mm); 备注
+Remarks: 适配机柜UPS5000-H-200K-NTN Applicable cabinet: UP
+
+--- Chunk 5 (len=243) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 1200; 机柜深度 D（mm）
+Cabinet Depth (mm): 850; 图纸名称
+Drawing Name: 支脚机柜1200*850（双柜） 1200 mm x 850 mm cabinet with feet (two cabinets); 备注
+Remarks: 适配机柜UPS5000-E/S/A-400K/500K 
+
+--- Chunk 6 (len=197) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 1400; 图纸名称
+Drawing Name: 支脚机柜1400*850（双柜） 1400 mm x 850 mm cabinet with feet (two cabinets); 备注
+Remarks: 适配机柜UPS5000-E/S/A-600K Applicable cabinet: UPS5000-E/S/A-600K
+
+--- Chunk 7 (len=198) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 2400; 图纸名称
+Drawing Name: 支脚机柜2400*850（四柜） 2400 mm x 850 mm cabinet with feet (four cabinets); 备注
+Remarks: 适配机柜UPS5000-E/S/A-800K Applicable cabinet: UPS5000-E/S/A-800K
+
+--- Chunk 8 (len=418) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 800; 机柜深度 D（mm）
+Cabinet Depth (mm): 1000; 图纸名称
+Drawing Name: 支脚机柜800*1000 800 mm x 1000 mm cabinet with feet; 备注
+Remarks: 适配机柜UPS5000-H-400K-600K-NT
+UPS5000-H-400K-600K-
+
+--- Chunk 9 (len=253) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 800; 图纸名称
+Drawing Name: 支脚机柜800*1000（柜中柜） 800 mm x 1000 mm cabinet with feet (with an internal cabinet); 备注
+Remarks: 适配机柜UPS5000-H-400K-600K-FTM(柜中柜机型) Applicable cabine
+
+--- Chunk 10 (len=203) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 1600; 图纸名称
+Drawing Name: 支脚机柜1600*1000（双柜） 1600 mm x 1000 mm cabinet with feet (two cabinets); 备注
+Remarks: 适配机柜UPS5000-H-800K/1200K Applicable cabinet: UPS5000-H-800K/12
+
+--- Chunk 11 (len=195) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 2400; 图纸名称
+Drawing Name: 支脚机柜2400*1000（三柜） 2400 mm x 1000 mm cabinet with feet (three cabinets); 备注
+Remarks: 适配机柜UPS5000-H-1600K Applicable cabinet: UPS5000-H-1600K
+
+--- Chunk 12 (len=306) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+产品类型
+Product Type: 其他机柜 Other cabinets; 机柜宽度 W（mm）
+Cabinet Width (mm): 400; 机柜深度 D（mm）
+Cabinet Depth (mm): 1000; 图纸名称
+Drawing Name: 支脚机柜400*1000 Cabinet with feet (400 mm x 1000 mm); 备注
+Remarks: 适配机柜U
+
+--- Chunk 13 (len=263) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 400; 机柜深度 D（mm）
+Cabinet Depth (mm): 850; 图纸名称
+Drawing Name: 带滚轮机柜400*850 Cabinet with castors (400 mm x 850 mm); 备注
+Remarks: 适配机柜ups5000-E/S/A-120K-300K使用的进线柜 Applicable
+
+--- Chunk 14 (len=301) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 600; 机柜深度 D（mm）
+Cabinet Depth (mm): 1200; 图纸名称
+Drawing Name: 带滚轮机柜600*850+选配上出风 600 mm x 850 mm cabinet with castors + Top air-flow cabinet; 备注
+Remarks: 适配机柜ups5000-E/S/
+
+--- Chunk 15 (len=300) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 1200; 机柜深度 D（mm）
+Cabinet Depth (mm): 1200; 图纸名称
+Drawing Name: 支脚机柜1200*850+选配上出风 1200 mm x 850 mm cabinet with feet + Top air-flow cabinet; 备注
+Remarks: 适配机柜UPS5000-E/S/A
+
+--- Chunk 16 (len=290) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+机柜宽度 W（mm）
+Cabinet Width (mm): 1400; 机柜深度 D（mm）
+Cabinet Depth (mm): 1200; 图纸名称
+Drawing Name: 支脚机柜1400*850+选配上出风 1400 mm x 850 mm cabinet with feet + Top air-flow cabinet; 备注
+Remarks: 适配机柜UPS5000-E/S/A
+
+--- Chunk 17 (len=298) ---
+    sheet=选型目录 Selection Catalog type=excel_row
+产品类型
+Product Type: 注/Notes：
+1.本底座接口图选型表及图纸文件仅适用于适用于华为平台版本机柜，其它定制类机柜可能涉及外部接口变化，请单独联系华为数字能源技术支持获取。 1. This document applies only to cabinets of Huawei platform versions. For other customized cabinets, c
+
+--- Chunk 18 (len=758) ---
+    sheet=P1 type=excel_p_sheet
+    drawing_name=带滚轮机柜600*1000                                               
+[图纸名称: 带滚轮机柜600*1000 Cabinet with castors (600 mm x 1000 mm)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in th
+
+--- Chunk 19 (len=756) ---
+    sheet=P2 type=excel_p_sheet
+    drawing_name=带滚轮机柜600*850                                                
+[图纸名称: 带滚轮机柜600*850 Cabinet with castors (600 mm x 850 mm)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the 
+
+--- Chunk 20 (len=754) ---
+    sheet=P3 type=excel_p_sheet
+    drawing_name=支脚机柜600*1000                                                
+[图纸名称: 支脚机柜600*1000 Cabinet with feet (600 mm x 1000 mm)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the fi
+
+--- Chunk 21 (len=771) ---
+    sheet=P4 type=excel_p_sheet
+    drawing_name=支脚机柜1200*850（双柜）                                            
+[图纸名称: 支脚机柜1200*850（双柜） 1200 mm x 850 mm cabinet with feet (two cabinets)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dim
+
+--- Chunk 22 (len=771) ---
+    sheet=P5 type=excel_p_sheet
+    drawing_name=支脚机柜1400*850（双柜）                                            
+[图纸名称: 支脚机柜1400*850（双柜） 1400 mm x 850 mm cabinet with feet (two cabinets)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dim
+
+--- Chunk 23 (len=772) ---
+    sheet=P6 type=excel_p_sheet
+    drawing_name=支脚机柜2400*850（四柜）                                            
+[图纸名称: 支脚机柜2400*850（四柜） 2400 mm x 850 mm cabinet with feet (four cabinets)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the di
+
+--- Chunk 24 (len=754) ---
+    sheet=P7 type=excel_p_sheet
+    drawing_name=支脚机柜800*1000                                                
+[图纸名称: 支脚机柜800*1000 Cabinet with feet (800 mm x 1000 mm)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the fi
+
+--- Chunk 25 (len=784) ---
+    sheet=P8 type=excel_p_sheet
+    drawing_name=支脚机柜800*1000（柜中柜）                                           
+[图纸名称: 支脚机柜800*1000（柜中柜） 800 mm x 1000 mm cabinet with feet (with an internal cabinet)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The un
+
+--- Chunk 26 (len=773) ---
+    sheet=P9 type=excel_p_sheet
+    drawing_name=支脚机柜1600*1000（双柜）                                           
+[图纸名称: 支脚机柜1600*1000（双柜） 1600 mm x 1000 mm cabinet with feet (two cabinets)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the d
+
+--- Chunk 27 (len=775) ---
+    sheet=P10 type=excel_p_sheet
+    drawing_name=支脚机柜2400*1000（三柜）                                    2400 mm
+[图纸名称: 支脚机柜2400*1000（三柜） 2400 mm x 1000 mm cabinet with feet (three cabinets)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the
+
+--- Chunk 28 (len=754) ---
+    sheet=P11 type=excel_p_sheet
+    drawing_name=支脚机柜400*1000                                               C
+[图纸名称: 支脚机柜400*1000 Cabinet with feet (400 mm x 1000 mm)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the fi
+
+--- Chunk 29 (len=756) ---
+    sheet=P12 type=excel_p_sheet
+    drawing_name=带滚轮机柜400*850                                                
+[图纸名称: 带滚轮机柜400*850 Cabinet with castors (400 mm x 850 mm)] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit of the dimensions in the 
+
+--- Chunk 30 (len=783) ---
+    sheet=P13 type=excel_p_sheet
+    drawing_name=带滚轮机柜600*850+选配上出风                                          
+[图纸名称: 带滚轮机柜600*850+选配上出风 600 mm x 850 mm cabinet with castors + Top air-flow cabinet] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The uni
+
+--- Chunk 31 (len=781) ---
+    sheet=P14 type=excel_p_sheet
+    drawing_name=支脚机柜1200*850+选配上出风                                          
+[图纸名称: 支脚机柜1200*850+选配上出风 1200 mm x 850 mm cabinet with feet + Top air-flow cabinet] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit 
+
+--- Chunk 32 (len=781) ---
+    sheet=P15 type=excel_p_sheet
+    drawing_name=支脚机柜1400*850+选配上出风                                          
+[图纸名称: 支脚机柜1400*850+选配上出风 1400 mm x 850 mm cabinet with feet + Top air-flow cabinet] 技术要求/Technical requirements:
+1.机柜宽度尺寸公差（0，-3）mm，图中标注尺寸单位：毫米 1. The cabinet width tolerance is (0, –3) mm. The unit 
+

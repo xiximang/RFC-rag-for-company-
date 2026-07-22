@@ -17,11 +17,22 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 import requests
 
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# 查询改写权威实现位于 backend/app/retrieval/query_rewriter.py，
+# 这里按文件加载以避免拖入整个 backend 依赖栈，保持 eval 脚本独立性。
+import importlib.util as _ilu
+_qr_spec = _ilu.spec_from_file_location(
+    "_query_rewriter", PROJECT_ROOT / "backend" / "app" / "retrieval" / "query_rewriter.py"
+)
+_qr_mod = _ilu.module_from_spec(_qr_spec)
+_qr_spec.loader.exec_module(_qr_mod)
+rewrite_query = _qr_mod.rewrite_query
 SAMPLES_DIR = PROJECT_ROOT / "samples_2"
 
 BASE_URL = os.environ.get("RAG_API_URL", "http://localhost:8080")
@@ -68,37 +79,39 @@ QUERY_ANNOTATIONS: List[Dict[str, Any]] = [
     {
         "query": "SOH显示电池异常，电池放电电压较低。",
         "expected_files": [
-            "02_iBattery 3.0 用户手册.pdf_chunk61",
+            "02_iBattery 3.0 用户手册.pdf_chunk65",
         ],
     },
     {
         "query": "iBOX的RF_Z指示灯不亮了",
         "expected_files": [
-            "01_iBattery 3.0 快速指南.pdf_chunk12",
-            "02_iBattery 3.0 用户手册.pdf_chunk53",
-            "02_iBattery 3.0 用户手册.pdf_chunk71",
+            "01_iBattery 3.0 快速指南.pdf_chunk14",
+            "02_iBattery 3.0 用户手册.pdf_chunk55",
+            "02_iBattery 3.0 用户手册.pdf_chunk77",
         ],
     },
     {
         "query": "下发电池电压低关机的命令是什么",
         "expected_files": [
-            "03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk169",
-            "03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk170",
-            "05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk183",
-            "05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk184",
+            "03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk185",
+            "03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk186",
+            "03_UPS5000-E-(20kVA-40kVA) 用户手册 (一体化UPS 2.0, 武汉工行).pdf_chunk187",
+            "05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk197",
+            "05_UPS5000-E-(20kVA-80kVA) 用户手册 (一体化UPS, 208V).pdf_chunk198",
         ],
     },
     {
-        "query": "开关状态线不正常，系统输出开关断开。",
+        "query": "输出开关断开，是什么问题",
         "expected_files": [
-            "18_UPS5000 告警参考.pdf_chunk638",
-            "18_UPS5000 告警参考.pdf_chunk639",
+            "18_UPS5000 告警参考.pdf_chunk654",
+            "18_UPS5000 告警参考.pdf_chunk655",
         ],
     },
     {
         "query": "UPS5000E工作模式_维修旁路是什么",
         "expected_files": [
             "09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk1",
+            "09_UPS5000-E-(25kVA-75kVA) V100R003C01 培训资料.ppt_chunk2",
         ],
     },
     {
@@ -112,29 +125,97 @@ QUERY_ANNOTATIONS: List[Dict[str, Any]] = [
         "query": "MDU显示屏接口有哪些",
         "expected_files": [
             "07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk83",
+            "07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk84",
         ],
     },
     {
         "query": "母线电压未升起，UPS整流器无法工作",
         "expected_files": [
-            "07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk172",
-            "11_UPS5000-E 维护指南.pdf_chunk65",
-            "18_UPS5000 告警参考.pdf_chunk307",
+            "07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk178",
+            "11_UPS5000-E 维护指南.pdf_chunk67",
+            "18_UPS5000 告警参考.pdf_chunk308",
         ],
     },
     {
         "query": "支脚机柜2400*850（四柜）的底座是如何并联的",
         "expected_files": [
-            "14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk14",
-            "14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk9",
+            "14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk2",    # 选型目录: 支脚机柜2400*850（四柜）规格行
+            "14_UPS5000&SmartLi 机柜底座接口图.xlsx_chunk13",   # P6: 支脚机柜2400*850（四柜）图纸 + 技术要求(含螺栓并联)
         ],
     },
     {
-        "query": "逆变器异常",
+        "query": "电池冷启动操作步骤",
         "expected_files": [
-            "18_UPS5000 告警参考.pdf_chunk51",
-            "07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk201",
-            "11_UPS5000-E 维护指南.pdf_chunk65",
+            "07_UPS5000-E-(25kVA-75kVA)-BF 用户手册.pdf_chunk164",   # 电池冷启动操作步骤
+        ],
+    },
+    # =====================================================================
+    # 新增 10 条 query（2026-07-22）：覆盖更多文档与问题类型
+    # =====================================================================
+    {
+        "query": "UPS5000安装对环境有什么要求？",
+        "expected_files": [
+            "19_UPS5000 安全须知.pdf_chunk0",   # 环境要求：清洁干燥、通风良好、防尘防凝露
+        ],
+    },
+    {
+        "query": "UPS出现0060-027逆变器异常告警应如何处理？",
+        "expected_files": [
+            "13_UPS5000&SmartLi FAQ.pdf_chunk5",   # 处理方法1：输出空开断开 → 插拔模块
+            "13_UPS5000&SmartLi FAQ.pdf_chunk6",   # 处理方法2：无输出空开 → 更换功率模块
+        ],
+    },
+    {
+        "query": "如何对UPS电池进行浅放电测试？",
+        "expected_files": [
+            "11_UPS5000-E 维护指南.pdf_chunk60",   # 自动浅放电测试（铅酸电池）
+            "11_UPS5000-E 维护指南.pdf_chunk62",   # 手动浅放电测试（锂电池）
+        ],
+    },
+    {
+        "query": "BF电池柜的CAN扩展卡拨码开关如何设置？",
+        "expected_files": [
+            "06_UPS5000-E-(25kVA-75kVA)-BF 模块化电池柜 快速指南.pdf_chunk3",   # DIP2-DIP4对应UPS/电池柜1-4地址
+        ],
+    },
+    {
+        "query": "UPS5000-E监控模块的LCD界面由哪几部分组成？",
+        "expected_files": [
+            "10_UPS5000-E 监控模块 用户手册.pdf_chunk43",   # 状态栏、告警栏、信息显示栏
+        ],
+    },
+    {
+        "query": "UPS系统的admin管理员用户默认密码是什么？",
+        "expected_files": [
+            "10_UPS5000-E 监控模块 用户手册.pdf_chunk46",   # LCD=000001, WEB=Changeme
+            "11_UPS5000-E 维护指南.pdf_chunk64",            # 同上（维护指南版本）
+            "20_UPS5000 干接点扩展卡 用户手册 (03021RKN).pdf_chunk11",  # 同上（干接点卡版本）
+        ],
+    },
+    {
+        "query": "如何安装反灌保护卡？安装时有哪些安全注意事项？",
+        "expected_files": [
+            "17_UPS5000 反灌保护卡 用户手册 (0302080427, 03021KQQ).pdf_chunk31",   # 支持热插拔，必须佩戴绝缘手套
+        ],
+    },
+    {
+        "query": "如何通过LCD或WEB界面设置干接点扩展卡的DO和DI端口？",
+        "expected_files": [
+            "20_UPS5000 干接点扩展卡 用户手册 (03021RKN).pdf_chunk12",   # LCD/WEB 设置路径和步骤
+        ],
+    },
+    {
+        "query": "UPS5000-E-(20kVA-80kVA) 208V版本如何进行无紧固安装调平？",
+        "expected_files": [
+            "04_UPS5000-E-(20kVA-80kVA) 快速指南 (一体化UPS, 208V).pdf_chunk1",   # 调节地脚螺栓0-8mm
+            "04_UPS5000-E-(20kVA-80kVA) 快速指南 (一体化UPS, 208V).pdf_chunk2",   # 滚轮悬空、水平尺校验
+        ],
+    },
+    {
+        "query": "UPS5000-E-SM半柜高各接口的螺栓规格和扭力力矩是多少？",
+        "expected_files": [
+            "08_UPS5000-E-(25kVA-75kVA)-SM 快速指南 (半柜高).pdf_chunk1",   # 螺栓规格表：主路M8/20N·m，电池M10/35N·m等
+            "08_UPS5000-E-(25kVA-75kVA)-SM 快速指南 (半柜高).pdf_chunk2",   # 续螺栓规格表 + 接线说明
         ],
     },
 ]
@@ -245,6 +326,12 @@ def wait_for_indexing(token: str, kb_id: str, timeout: int = 300) -> bool:
 
 def search(token: str, kb_id: str, query: str, mode: str, top_k: int, rerank_top_k: int) -> Dict[str, Any]:
     url = f"{BASE_URL}/api/v1/search"
+    # 对 keyword 模式做查询改写（剥离疑问词）
+    if mode == "keyword":
+        rw = rewrite_query(query)
+        if rw != query:
+            print(f"    (改写: '{query[:40]}' → '{rw}')")
+            query = rw
     if mode in ("semantic", "keyword"):
         url = f"{url}/{mode}"
     resp = requests.post(
@@ -511,6 +598,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         default=300,
         help="Maximum seconds to wait for document indexing",
     )
+    parser.add_argument(
+        "--run-new-only",
+        action="store_true",
+        help="只跑新增的10条query（跳过原来的10条）",
+    )
     return parser.parse_args(argv)
 
 
@@ -583,9 +675,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if indexed_count < len(SAMPLE_FILES):
         print("[WARN] Not all sample documents are indexed")
 
+    # 2026-07-22: 支持只跑新增的10条query
+    active_queries = QUERY_ANNOTATIONS[10:] if args.run_new_only else QUERY_ANNOTATIONS
+    if args.run_new_only:
+        print(f"[INFO] --run-new-only: 只跑新增的 {len(active_queries)} 条 query")
+
     # Translate filename annotations to doc_id annotations.
     annotated_queries: List[Tuple[str, Set[str]]] = []
-    for qa in QUERY_ANNOTATIONS:
+    for qa in active_queries:
         relevant_doc_ids: Set[str] = set()
         for filename in qa["expected_files"]:
             # 支持 chunk 级别标注：filename_chunkN，去掉 _chunkN 获取文档名

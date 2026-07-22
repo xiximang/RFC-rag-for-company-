@@ -42,4 +42,18 @@ api.interceptors.response.use(
   }
 )
 
+export async function submitCandidateFeedback(
+  messageId: string,
+  payload: {
+    ranking: number[]
+    chosen_rank: number
+    ratings: Record<number, number>
+    comment?: string
+    action?: string
+  }
+) {
+  const res = await api.post(`/v1/chat/messages/${messageId}/candidate-feedback`, payload)
+  return res.data
+}
+
 export default api

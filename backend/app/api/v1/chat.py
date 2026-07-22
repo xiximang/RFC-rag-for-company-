@@ -1,7 +1,10 @@
+import logging
 from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
@@ -9,7 +12,10 @@ from app.api.v1.auth import get_current_user
 from app.core.exceptions import PermissionDeniedException
 from app.database import get_db
 from app.models.knowledge_base import KnowledgeBase
+import json
+
 from app.schemas.chat import (
+    CandidateItem,
     ChatRequest,
     ChatResponse,
     ConversationCreate,
@@ -53,6 +59,26 @@ async def _check_kb_ids_access(
             raise PermissionDeniedException("没有权限访问该知识库")
 
 
+def _build_candidates(chunks: List[dict]) -> List[dict]:
+    """把 retrieval_service 返回的 reranked chunks 映射成候选列表。
+
+    五级兼容：直接复用已过五级穿透的结果，content 取降级后值，不反查原文。
+    L1/L2/L4 在检索前已剔除，L3 不通过的已 continue，L5 降级的 filtered=True。
+    """
+    candidates = []
+    for idx, c in enumerate(chunks):
+        candidates.append({
+            "rank": idx + 1,
+            "chunk_id": c.get("chunk_id"),
+            "doc_id": c.get("doc_id"),
+            "content": c.get("content", "") or "",
+            "rerank_score": c.get("rerank_score"),
+            "max_keyword_level": c.get("max_keyword_level", "L0"),
+            "filtered": c.get("filtered", False),
+        })
+    return candidates
+
+
 async def _retrieve_and_generate(
     db: AsyncSession,
     user_id: UUID,
@@ -73,6 +99,7 @@ async def _retrieve_and_generate(
             "answer": "当前查询涉及绝密内容，禁止调用外部API生成回答。",
             "intercepted": True,
             "sources": [],
+            "candidates": [],
             "strategy": fast_strategy,
         }
 
@@ -95,6 +122,7 @@ async def _retrieve_and_generate(
             "answer": "当前查询涉及绝密内容，禁止调用外部API生成回答。",
             "intercepted": True,
             "sources": [],
+            "candidates": [],
             "strategy": strategy,
         }
 
@@ -138,6 +166,7 @@ async def _retrieve_and_generate(
             "degraded": True,
             "error": str(e),
         }
+    result["candidates"] = _build_candidates(chunks)
     result["strategy"] = strategy
     return result
 
@@ -283,6 +312,13 @@ async def chat(
         stream=False,
     )
 
+    logger.info(
+        "DEBUG candidates in result: present=%s, type=%s, len=%s",
+        "candidates" in result,
+        type(result.get("candidates")).__name__ if result.get("candidates") is not None else "NoneType",
+        len(result["candidates"]) if result.get("candidates") else 0,
+    )
+
     if conversation_id:
         await conversation_service.add_message(
             db=db,
@@ -297,14 +333,20 @@ async def chat(
             role="assistant",
             content=result["answer"],
             sources=result.get("sources", []),
+            # 候选落库：直接用已过五级穿透的降级候选，不反查原文（五级兼容 P1/P2）
+            candidates=result.get("candidates"),
         )
 
+    candidates = [
+        CandidateItem(**c) for c in result.get("candidates", [])
+    ]
     return ChatResponse(
         answer=result["answer"],
         intercepted=result["intercepted"],
         sources=[SourceItem(**s) for s in result.get("sources", [])],
         strategy=result.get("strategy"),
         conversation_id=conversation_id,
+        candidates=candidates,
     )
 
 
@@ -397,6 +439,11 @@ async def chat_stream(
             }
             for c in chunks
         ]
+
+        # 候选展示：流式正文结束后单独发一帧候选事件，前端按 event=candidates 解析。
+        # content 直接用 chunks 降级后值，不反查原文（五级兼容）。
+        candidates_payload = _build_candidates(chunks)
+        yield {"event": "candidates", "data": json.dumps(candidates_payload, ensure_ascii=False)}
 
         # 流式结束后持久化消息（保留 sources 用于历史溯源）
         if conversation_id:

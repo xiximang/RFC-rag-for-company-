@@ -45,6 +45,7 @@ class BaseIngestPipeline(ABC):
         text = self._remove_page_placeholders(text)     # Page<number>、--- 第X页 ---
         text = self._merge_hyphen_newlines(text)        # 孤连字符换行 (\w)-\n(\w)
         text = self._fix_control_chars(text)            # \x0B → \n
+        # text = self._remove_toc_dots(text)              # 目录点号 ......1 → 空
 
         # 步骤3: 规范化空白
         text = self._normalize_whitespace(text)         # 3+换行→2换行, 多空格→1空格
@@ -92,6 +93,29 @@ class BaseIngestPipeline(ABC):
     def _fix_control_chars(self, text: str) -> str:
         """\x0B (PPT 列表分隔符) → 换行"""
         return text.replace('\x0B', '\n')
+
+    # def _remove_toc_dots(self, text: str) -> str:
+    #     """清除目录点号：标题......页码 → 标题（保留）。
+
+    #     目录行常见格式：条目文本 + 连续10个以上的点号 + 页码。
+    #     只清除点号与页码，保留条目文本。如果一行只有点号则整行删除。
+    #     """
+    #     if not text:
+    #         return text
+
+    #     lines = text.split('\n')
+    #     cleaned = []
+    #     for line in lines:
+    #         stripped = line.strip()
+    #         # 整行全是点号 → 跳过
+    #         if stripped and stripped.replace('.', '').strip() == '':
+    #             continue
+    #         # 清除行尾的点号+页码（连续10+个点号）
+    #         cleaned_line = re.sub(r'[.]{10,}\s*\d*\s*$', '', line)
+    #         # 清除行尾的点号（连续10+个点号后无数字的情况）
+    #         cleaned_line = re.sub(r'[.]{10,}\s*$', '', cleaned_line)
+    #         cleaned.append(cleaned_line)
+    #     return '\n'.join(cleaned)
 
     def _normalize_whitespace(self, text: str) -> str:
         """3+连续换行 → 2换行, 2+连续空格 → 1空格, 去首尾"""

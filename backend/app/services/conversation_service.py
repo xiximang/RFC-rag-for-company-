@@ -85,13 +85,20 @@ class ConversationService:
         role: str,
         content: str,
         sources: Optional[List[Dict[str, Any]]] = None,
+        candidates: Optional[List[Dict[str, Any]]] = None,
     ) -> Message:
-        """向会话中添加一条消息。"""
+        """向会话中添加一条消息。
+
+        candidates 为可选参数（仅 assistant 消息使用），存的是已过五级穿透、
+        L5 降级后的候选列表，写入前不再二次取原文（五级兼容 P1/P2）。
+        不传或传 None 时行为与原逻辑完全一致（candidates 列保持 NULL）。
+        """
         message = Message(
             conversation_id=conversation_id,
             role=role,
             content=content,
             sources=sources or [],
+            candidates=candidates,
         )
         db.add(message)
         await db.commit()

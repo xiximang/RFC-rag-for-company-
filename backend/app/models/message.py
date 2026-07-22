@@ -52,6 +52,17 @@ class Message(Base):
         nullable=True,
         comment="反馈备注",
     )
+    # 工程师反馈与上下文工程：候选落库 + 候选排序反馈（仅新增字段，不影响现有 feedback 路径）
+    candidates: Mapped[list | None] = mapped_column(
+        JSONB,
+        nullable=True,
+        comment="Rerank 候选列表（已过五级穿透，content 为降级后值）",
+    )
+    candidate_feedback: Mapped[dict | None] = mapped_column(
+        JSONB,
+        nullable=True,
+        comment="工程师对候选的排序/评分反馈",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

@@ -1,4 +1,15 @@
+"""通用 Excel 解析器
+
+所有 Sheet 走同一套逻辑，不依赖 Sheet 名、不依赖具体列名。
+自动处理：
+- 合并单元格（openpyxl 前向填充）
+- 合并标题行（如 SOP 文件）
+- 稀疏型 Sheet（封面/修订记录 → 全文一个 chunk）
+- 表格型 Sheet（规整表格 → 每行 "列名: 值"）
+"""
+
 import os
+import re
 from typing import List, Dict, Any, Tuple
 from uuid import UUID
 import pandas as pd
@@ -6,276 +17,466 @@ from app.pipelines.base import BaseIngestPipeline
 
 
 class ExcelIngestPipeline(BaseIngestPipeline):
-    """优化版 Excel Pipeline：先提取文本，再切分 Chunks
+    """通用 Excel Pipeline：自适应任意结构的 Excel"""
 
-    改进点：
-    1. 智能检测表头行（跳过空行）
-    2. 过滤空行空列
-    3. 减少元数据描述 chunks
-    4. 分离文本提取和切分逻辑
-    """
+    def __init__(self):
+        super().__init__()
+        # 内存缓存：path → (openpyxl.Workbook, mtime)
+        # 同一个文件的所有 sheet 共享一个 Workbook 对象，避免反复 load_workbook
+        # mtime 用于检测文件是否被覆盖更新，主动失效缓存
+        self._wb_cache: Dict[str, Tuple["openpyxl.Workbook", float]] = {}
 
     @property
     def supported_types(self) -> List[str]:
         return ["excel", "xlsx", "xls", "csv"]
 
+    # ------------------------------------------------------------------
+    # 主入口
+    # ------------------------------------------------------------------
+
     def process(
         self,
         file_path: str,
         doc_id: UUID,
-        metadata: Dict[str, Any] = None
+        metadata: Dict[str, Any] = None,
     ) -> List[Dict[str, Any]]:
-        # Step 1: 提取文本
-        extracted_text, doc_metadata = self._extract_text(file_path)
-
-        # 2026-07-08: 文本清洗（在切分前执行）
-        extracted_text = self._clean_text(extracted_text)
-
-        # Step 2: 切分 Chunks
-        chunks = self._chunk_text(extracted_text)
-
-        # 合并元数据
-        merged_meta = {**(metadata or {}), **doc_metadata}
-        for chunk in chunks:
-            chunk["metadata"] = {**chunk.get("metadata", {}), **merged_meta}
-
-        return chunks
-
-    def _extract_text(self, file_path: str) -> Tuple[str, Dict[str, Any]]:
-        """Step 1: 把 Excel 转成可读纯文本"""
         ext = os.path.splitext(file_path)[1].lower()
 
         if ext == ".csv":
-            sheets = {"Sheet1": pd.read_csv(file_path)}
+            df = pd.read_csv(file_path, header=None).astype(object)
+            df = self._normalize_dataframe(df)
+            if not df.empty:
+                strategy = self._classify_sheet(df)
+                chunks = self._generate_chunks(df, strategy)
+                for c in chunks:
+                    c["metadata"]["sheet"] = "Sheet1"
+                    c["metadata"]["strategy"] = strategy
+            else:
+                chunks = []
         else:
-            sheets = pd.read_excel(file_path, sheet_name=None, header=None)
+            excel_file = pd.ExcelFile(file_path)
+            all_chunks = []
+            try:
+                for sheet_name in excel_file.sheet_names:
+                    try:
+                        df = self._normalize_sheet(file_path, sheet_name)
+                        if df.empty:
+                            continue
+                        strategy = self._classify_sheet(df)
+                        if strategy == "tabular":
+                            merge_map = self._get_merge_map_in_clean_coords(file_path, sheet_name, df)
+                            df = self._forward_fill_merges(df, merge_map)
+                            df = self._normalize_dataframe(df)
+                            if df.empty:
+                                continue
+                        chunks = self._generate_chunks(df, strategy)
+                        for c in chunks:
+                            c["metadata"]["sheet"] = sheet_name
+                            c["metadata"]["strategy"] = strategy
+                        all_chunks.extend(chunks)
+                    except Exception as e:
+                        # 单个 sheet 解析失败不影响其他 sheet
+                        continue
+            finally:
+                self._close_wb_cache(file_path)
+            chunks = all_chunks
 
-        all_text_parts = []
-        sheet_summaries = []
+        # 全局清洗 + 统一编号
+        chunks = self._global_clean_chunks(chunks)
+        # 统一 chunk_index：跨 sheet 全局递增，适配 chunk 级评测标注
+        for seq, c in enumerate(chunks):
+            c["chunk_index"] = seq
+            if "chunk_index" in c.get("position_info", {}):
+                c["position_info"]["chunk_index"] = seq
+        merged_meta = {**(metadata or {}), "title": os.path.basename(file_path)}
+        for c in chunks:
+            c["metadata"] = {**c.get("metadata", {}), **merged_meta}
+        return chunks
 
-        for sheet_name, df in sheets.items():
-            # 清理 DataFrame
-            df = self._clean_dataframe(df)
+    # ------------------------------------------------------------------
+    # Step 1: 归一化
+    # ------------------------------------------------------------------
 
-            if df.empty:
-                continue
-
-            # 提取有效内容
-            sheet_text = self._extract_sheet_text(sheet_name, df)
-            if sheet_text:
-                all_text_parts.append(sheet_text)
-                sheet_summaries.append(f"工作表'{sheet_name}': {len(df)}行有效数据")
-
-        # 合并所有文本
-        full_text = "\n\n".join(all_text_parts)
-
-        metadata = {
-            "title": os.path.basename(file_path),
-            "author": "",
-            "page_count": len(sheets),
-            "language": self._detect_language(full_text),
-            "sheet_summaries": sheet_summaries,
-        }
-
-        return full_text, metadata
-
-    def _clean_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
-        """清理 DataFrame：去掉空行空列，检测表头"""
-        # 1. 去掉全空的行和列
-        df = df.dropna(how='all', axis=0)  # 去掉全空行
-        df = df.dropna(how='all', axis=1)  # 去掉全空列
-
+    def _normalize_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+        """通用 DataFrame 归一化：去空行列 → 检测表头 → 提取列名。"""
+        df = df.dropna(how="all", axis=0).dropna(how="all", axis=1)
         if df.empty:
             return df
 
-        # 2. 检测表头行（第一个包含 >=2 个非空单元格的行）
         header_row_idx = self._detect_header_row(df)
+        headers = df.iloc[header_row_idx].tolist()
+        df.columns = [
+            str(c).strip() if pd.notna(c) and str(c).strip() else f"Col_{i}"
+            for i, c in enumerate(headers)
+        ]
+        df = df.iloc[header_row_idx + 1:].reset_index(drop=True)
 
-        # 3. 如果表头不在第一行，重新设置列名
-        if header_row_idx > 0:
-            # 把表头行作为列名
-            new_columns = df.iloc[header_row_idx].tolist()
-            # 去掉表头行之前的数据（包括表头行）
-            df = df.iloc[header_row_idx + 1:].reset_index(drop=True)
-            # 设置列名
-            df.columns = [str(c) if pd.notna(c) else f"列{i}" for i, c in enumerate(new_columns)]
-        else:
-            # 使用第一行作为列名
-            new_columns = df.iloc[0].tolist()
-            df = df.iloc[1:].reset_index(drop=True)
-            df.columns = [str(c) if pd.notna(c) else f"列{i}" for i, c in enumerate(new_columns)]
+        # 列名过长或含换行 → 回退到 Col_N
+        for i in range(len(df.columns)):
+            col = str(df.columns[i])
+            if len(col) > 50 or '\n' in col:
+                df.columns.values[i] = f"Col_{i}"
 
-        # 4. 再次去掉空行（可能有些行只有空值）
-        df = df.replace(r'^\s*$', pd.NA, regex=True)
-        df = df.dropna(how='all', axis=0)
+        # 全部是 Col_N 降级名 → 统一简化
+        meaningful = [c for c in df.columns if not re.match(r'^Col_\d+$', c)]
+        if not meaningful:
+            for i in range(len(df.columns)):
+                df.columns.values[i] = f"Col_{i}"
 
-        # 5. 填充剩余空值
         df = df.fillna("")
-
         return df
 
+    def _normalize_sheet(self, file_path: str, sheet_name: str) -> pd.DataFrame:
+        """Excel sheet 归一化：读取 → 去空 → 标准归一化（不含 forward-fill）。"""
+        df = pd.read_excel(file_path, sheet_name=sheet_name, header=None)
+        df = df.astype(object)
+        df = df.dropna(how="all", axis=0).dropna(how="all", axis=1)
+        if df.empty:
+            return df
+        df = self._normalize_dataframe(df)
+        return df
+
+    # ------------------------------------------------------------------
+    # Workbook 缓存（复用 openpyxl 对象，减少磁盘 I/O）
+    # ------------------------------------------------------------------
+
+    def _load_wb_cache(self, file_path: str) -> "openpyxl.Workbook":
+        """缓存版 load_workbook：同一文件只加载一次。
+
+        每次调用前校验文件的修改时间（mtime），如果文件被覆盖更新，
+        则主动关闭旧缓存并重新加载，确保不返回过期数据。
+        """
+        from openpyxl import load_workbook
+
+        current_mtime = os.path.getmtime(file_path)
+        cached = self._wb_cache.get(file_path)
+
+        # 缓存命中且 mtime 未变 → 直接复用
+        if cached is not None and cached[1] == current_mtime:
+            return cached[0]
+
+        # 缓存失效（未命中 / mtime 变了）→ 关闭旧的，重新加载
+        if cached is not None:
+            cached[0].close()
+
+        wb = load_workbook(file_path, data_only=True)
+        self._wb_cache[file_path] = (wb, current_mtime)
+        return wb
+
+    def _close_wb_cache(self, file_path: str) -> None:
+        """弹出并关闭 Workbook，释放文件句柄和内存。
+
+        在 process() 的 finally 块中调用，保证每个 process 调用
+        最多持有 1 个文件缓存，不会随着调用次数累积。
+        """
+        cached = self._wb_cache.pop(file_path, None)
+        if cached is not None:
+            cached[0].close()
+
+    # ------------------------------------------------------------------
+    # 合并单元格处理
+    # ------------------------------------------------------------------
+
+    def _get_merge_map_in_clean_coords(
+        self, file_path: str, sheet_name: str, clean_df: pd.DataFrame
+    ) -> Dict[str, str]:
+        """在 dropna 后的 DataFrame 上重建合并单元格映射。
+
+        dropna 移除了全空行列，原始 openpyxl 坐标（1-indexed）与裁剪后
+        的 DataFrame 坐标（0-indexed）不再对应。本方法只保留那些在
+        clean_df 中仍存在的单元格，并映射到新的行列位置。
+        """
+        # clean_df 的 index/columns 保留了原始位置号（如 [1,2,4,...]）
+        kept_rows = set(clean_df.index)
+        kept_cols = set(clean_df.columns)
+        row_pos = {orig: idx for idx, orig in enumerate(clean_df.index)}
+        col_pos = {orig: idx for idx, orig in enumerate(clean_df.columns)}
+
+        merge_map = {}
+        try:
+            wb = self._load_wb_cache(file_path)
+            if sheet_name not in wb.sheetnames:
+                return merge_map
+            ws = wb[sheet_name]
+
+            for merged_range in ws.merged_cells.ranges:
+                top_left_val = ws.cell(merged_range.min_row, merged_range.min_col).value
+                if top_left_val is None or (isinstance(top_left_val, str) and not top_left_val.strip()):
+                    continue
+                val = str(top_left_val).strip()
+                if len(val) < 2:
+                    continue
+                # openpyxl 坐标转 0-indexed
+                for r in range(merged_range.min_row, merged_range.max_row + 1):
+                    orig_r = r - 1  # 转为 0-indexed（匹配 df 的原始行号）
+                    if orig_r not in kept_rows:
+                        continue
+                    new_r = row_pos[orig_r]
+                    for c in range(merged_range.min_col, merged_range.max_col + 1):
+                        orig_c = c - 1
+                        if orig_c not in kept_cols:
+                            continue
+                        new_c = col_pos[orig_c]
+                        if orig_r == merged_range.min_row - 1 and orig_c == merged_range.min_col - 1:
+                            continue  # 跳过左上角
+                        merge_map[f"{new_r},{new_c}"] = val
+        except Exception:
+            pass
+        return merge_map
+
+    def _forward_fill_merges(self, df: pd.DataFrame, merge_map: Dict[str, str]) -> pd.DataFrame:
+        """仅对合并区域内的空值做前向填充"""
+        for r in range(len(df)):
+            for c in range(len(df.columns)):
+                key = f"{r},{c}"
+                if key in merge_map:
+                    # 只在单元格为空时填充
+                    if pd.isna(df.iloc[r, c]) or str(df.iloc[r, c]).strip() == "":
+                        df.iloc[r, c] = merge_map[key]
+        return df
+
+    # ------------------------------------------------------------------
+    # 智能表头检测
+    # ------------------------------------------------------------------
+
     def _detect_header_row(self, df: pd.DataFrame) -> int:
-        """检测表头行：第一个包含 >=2 个非空单元格的行"""
-        for i, row in df.iterrows():
-            non_empty_count = sum(1 for cell in row if pd.notna(cell) and str(cell).strip())
-            if non_empty_count >= 2:
-                return i
-        return 0  # 默认第一行
+        """
+        检测真正的表头行。
 
-    def _extract_sheet_text(self, sheet_name: str, df: pd.DataFrame) -> str:
-        """提取单个工作表的文本内容"""
-        parts = []
+        策略：遍历前 15 行，找到第一个满足以下条件的行作为表头：
+        1. 至少有 2 个非空单元格
+        2. 非空单元格中短文本（2~30 字符）占比高
+        3. 该行不是页码/版权行
+        4. 下一行存在数据
+        5. 该行不含多行单元格（\n 换行）
 
-        # 添加工作表标题
-        parts.append(f"【{sheet_name}】")
+        如果找不到高质量的表头，返回 0 并让后续逻辑降级处理。
+        """
+        rows, cols = df.shape
+        if rows == 0:
+            return 0
 
-        # 添加列名（如果有意义的话）
-        columns = df.columns.tolist()
-        if not all(str(c).startswith("列") for c in columns):
-            # 列名不是自动生成的，说明有表头
-            parts.append(f"列: {', '.join(str(c) for c in columns)}")
+        best_score = -1
+        best_idx = 0
 
-        # 逐行提取内容
+        for i in range(min(rows, 15)):
+            non_empty = [(c, str(df.iloc[i, c]).strip()) for c in range(cols)
+                         if pd.notna(df.iloc[i, c]) and str(df.iloc[i, c]).strip()]
+
+            if len(non_empty) < 2:
+                continue
+
+            # 判据 1：是否包含多行单元格（\n 换行）→ 排除，这种通常是正文内容
+            has_multiline = sum(1 for _, v in non_empty if '\n' in v)
+            if has_multiline >= 1:
+                continue
+
+            # 判据 2：是否是页码/版权行
+            first_vals = ' '.join(v for _, v in non_empty[:3]).lower()
+            if any(kw in first_vals for kw in ['page', 'all rights', 'copyright', '第', '页']):
+                continue
+
+            # 判据 3：短文本比例（列名通常较短）
+            short = sum(1 for _, v in non_empty if 2 <= len(v) <= 40)
+            short_ratio = short / len(non_empty) if non_empty else 0
+
+            # 判据 4：该行不全是数字
+            number_count = sum(1 for _, v in non_empty if re.match(r'^[\d\s.,\-]+$', v))
+            number_ratio = number_count / len(non_empty) if non_empty else 0
+
+            # 判据 5：下一行有数据
+            next_has_data = False
+            if i + 1 < rows:
+                next_non_empty = sum(1 for c in range(cols)
+                                     if pd.notna(df.iloc[i + 1, c]) and str(df.iloc[i + 1, c]).strip())
+                next_has_data = next_non_empty >= 2
+
+            score = 0
+            if short_ratio >= 0.5:
+                score += 2
+            if next_has_data:
+                score += 2
+            if number_ratio < 0.3:
+                score += 1
+            if short_ratio >= 0.8:
+                score += 1  # 全是短文本 → 强信号
+
+            if score > best_score:
+                best_score = score
+                best_idx = i
+
+        return best_idx if best_score >= 3 else 0
+
+    # ------------------------------------------------------------------
+    # Step 2: 自动分类
+    # ------------------------------------------------------------------
+
+    def _classify_sheet(self, df: pd.DataFrame) -> str:
+        """
+        根据数据特征自动分类。
+        - 'sparse': 封面、修订记录等 → 整页全文提取
+        - 'tabular': 规整表格 → 每行 "列名: 值"
+        """
+        rows, cols = df.shape
+        if rows == 0 or cols == 0:
+            return "sparse"
+
+        # 总非空单元格比例
+        total_cells = rows * cols
+        non_empty = sum(1 for r in range(rows) for c in range(cols)
+                        if pd.notna(df.iloc[r, c]) and str(df.iloc[r, c]).strip())
+        density = non_empty / total_cells if total_cells > 0 else 0
+
+        # 特征 A：行数 ≤ 3 或密度极低 → 稀疏型
+        if rows <= 3 or density < 0.15:
+            return "sparse"
+
+        # 特征 B：列名是否有明确含义（非 Col_N 模式）
+        col_names = list(df.columns)
+        auto_col_ratio = sum(1 for c in col_names if re.match(r'^Col_\d+$', c)) / len(col_names)
+
+        if auto_col_ratio > 0.5:
+            return "sparse"
+
+        # 默认：表格型
+        return "tabular"
+
+    # ------------------------------------------------------------------
+    # Step 3: 生成 Chunks
+    # ------------------------------------------------------------------
+
+    def _generate_chunks(self, df: pd.DataFrame, strategy: str) -> List[Dict[str, Any]]:
+        if strategy == "sparse":
+            return self._generate_sparse(df)
+        else:
+            return self._generate_tabular(df)
+
+    def _generate_sparse(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
+        """稀疏型：整页一个 chunk，用自然语言拼接，行内+行间去重。
+
+        forward-fill 会把合并单元格的值填到多列，导致同一行里
+        相同内容重复出现。去重逻辑：先列内去重（保留顺序），
+        再行间去重。
+        """
+        text_parts = []
+        seen_rows: set = set()
+        seen_core: set = set()
         for idx, row in df.iterrows():
+            # 1. 列内去重
             row_parts = []
+            seen_cols: set = set()
             for col in df.columns:
-                value = str(row[col]).strip()
-                if value and value != "NaT":
-                    # 只输出有值的列
-                    row_parts.append(f"{col}: {value}")
+                val = str(row[col]).strip()
+                if val and val not in ("NaT", "nan", "") and val not in seen_cols:
+                    seen_cols.add(val)
+                    row_parts.append(val)
+            if not row_parts:
+                continue
+            # 2. 行间去重
+            cur_text = " ".join(row_parts)
+            if cur_text in seen_rows:
+                continue
+            seen_rows.add(cur_text)
+            # 3. 规范化去重（去掉 "All rights reserved" 前缀再比）
+            core = cur_text
+            if core.startswith("All rights reserved"):
+                core = core[len("All rights reserved"):].strip()
+            if core and core in seen_core:
+                continue
+            if core:
+                seen_core.add(core)
+            text_parts.append(cur_text)
+        text = "\n".join(text_parts)
+        if not text.strip():
+            return []
+        return [{
+            "content": text,
+            "modality": "table",
+            "chunk_index": 0,
+            "position_info": {"type": "excel_sparse", "chunk_index": 0},
+            "metadata": {},
+        }]
 
-            if row_parts:
-                parts.append("; ".join(row_parts))
+    def _generate_tabular(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
+        """表格型：按字符窗口合并行，每行输出 '列名: 值' 格式。
 
-        return "\n".join(parts)
+        不按"一行一 chunk"硬切，而是在 500~1500 字符范围内
+        动态合并连续行，保证 chunk 语义完整且大小均匀。
+        """
+        TARGET_MIN = 500
+        TARGET_MAX = 1500
 
-    def _chunk_text(
-        self,
-        text: str,
-        target_size: int = 600,
-        min_size: int = 200,
-        max_size: int = 1000,
-        overlap: int = 100,
-    ) -> List[Dict[str, Any]]:
-        """Step 2: 切分文本为 Chunks（复用 document_pipeline 的逻辑）"""
-        chunks = []
-        if not text or not text.strip():
-            return chunks
+        def row_to_text(row) -> str:
+            parts = []
+            for col in df.columns:
+                val = str(row[col]).strip()
+                if val and val not in ("NaT", "nan", ""):
+                    col_name = str(col)
+                    if re.match(r'^Col_\d+$', col_name):
+                        parts.append(val)
+                    else:
+                        parts.append(f"{col_name}: {val}")
+            return "; ".join(parts) if parts else ""
 
-        # 1. 先按段落切分（遇到空行就切）
-        paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
-
-        # 如果段落数量太少，尝试按单个换行符切分
-        if len(paragraphs) < 3:
-            paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
-
-        # 2. 合并小段落
-        merged = []
-        current = ""
-        for para in paragraphs:
-            if len(current) + len(para) <= target_size:
-                current += "\n\n" + para if current else para
-            else:
-                if current:
-                    merged.append(current)
-                current = para
-        if current:
-            merged.append(current)
-
-        # 3. 拆分大段落
-        for chunk in merged:
-            if len(chunk) > max_size:
-                # 按句子切分
-                sentences = self._split_by_sentence(chunk)
-                sub_chunks = self._merge_sentences(sentences, target_size)
-                for sub_chunk in sub_chunks:
-                    chunks.append(sub_chunk)
-            else:
-                chunks.append(chunk)
-
-        # 4. 合并小 chunks
-        chunks = self._merge_small_chunks(chunks, min_size)
-
-        # 5. 添加 overlap
-        chunks_with_overlap = []
-        for i, chunk in enumerate(chunks):
-            if i > 0:
-                prev = chunks[i-1]
-                overlap_text = prev[-overlap:] if len(prev) > overlap else prev
-                chunk = overlap_text + "\n\n" + chunk
-            chunks_with_overlap.append(chunk)
-
-        # 6. 格式化输出
-        result = []
-        for i, chunk_text in enumerate(chunks_with_overlap):
-            result.append({
-                "content": chunk_text,
+        def flush_buffer(buf: list) -> dict:
+            rows_idx = [r for r, _ in buf]
+            merged = "\n".join(t for _, t in buf)
+            return {
+                "content": merged,
                 "modality": "table",
-                "chunk_index": i,
-                "position_info": {"chunk_index": i, "type": "excel"},
-                "metadata": {},
-            })
+                "chunk_index": rows_idx[0],
+                "position_info": {
+                    "type": "excel_tabular",
+                    "row_start": rows_idx[0],
+                    "row_end": rows_idx[-1],
+                    "chunk_index": rows_idx[0],
+                },
+                "metadata": {"row_index": rows_idx[0], "row_count": len(buf)},
+            }
 
-        return result
-
-    def _split_by_sentence(self, text: str) -> List[str]:
-        """按句子切分"""
-        import re
-        pattern = r'(?<=[。！？.!?;；])\s*'
-        return [s.strip() for s in re.split(pattern, text) if s.strip()]
-
-    def _merge_sentences(self, sentences: List[str], target_size: int) -> List[str]:
-        """合并句子到合适的 chunk 大小"""
         chunks = []
-        current_chunk = ""
+        buffer: list[tuple[int, str]] = []
+        buffer_len = 0
 
-        for sentence in sentences:
-            if len(current_chunk) + len(sentence) <= target_size:
-                current_chunk += sentence
-            else:
-                if current_chunk:
-                    chunks.append(current_chunk)
-                current_chunk = sentence
+        for idx, row in df.iterrows():
+            text = row_to_text(row)
+            if not text or len(text) < 10:
+                continue
+            if buffer_len + len(text) > TARGET_MAX and buffer:
+                chunks.append(flush_buffer(buffer))
+                buffer, buffer_len = [], 0
+            buffer.append((int(idx), text))
+            buffer_len += len(text)
+            if buffer_len >= TARGET_MIN:
+                chunks.append(flush_buffer(buffer))
+                buffer, buffer_len = [], 0
 
-        if current_chunk:
-            chunks.append(current_chunk)
-
+        if buffer:
+            chunks.append(flush_buffer(buffer))
         return chunks
 
-    def _merge_small_chunks(self, chunks: List[str], min_size: int) -> List[str]:
-        """合并过小的 chunks"""
-        if not chunks:
-            return chunks
+    # ------------------------------------------------------------------
+    # 全局清洗
+    # ------------------------------------------------------------------
 
-        merged = []
-        current = chunks[0]
-
-        for chunk in chunks[1:]:
-            if len(current) < min_size:
-                current += "\n\n" + chunk
-            else:
-                merged.append(current)
-                current = chunk
-
-        merged.append(current)
-
-        # 再次检查
-        final_merged = []
-        for chunk in merged:
-            if len(chunk) < min_size and final_merged:
-                final_merged[-1] += "\n\n" + chunk
-            else:
-                final_merged.append(chunk)
-
-        return final_merged
-
-    def _detect_language(self, text: str) -> str:
-        """简单语言检测"""
-        if not text:
-            return ""
-        # 统计中文字符比例
-        chinese_count = sum(1 for c in text if '一' <= c <= '鿿')
-        total_count = len(text)
-        if total_count == 0:
-            return ""
-        return "zh" if chinese_count / total_count > 0.1 else "en"
+    def _global_clean_chunks(self, chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """去除残留的解析噪音"""
+        noise_patterns = [
+            r'Col_\d+:\s*NaT',
+            r'Col_\d+:\s*$',
+            r'dtype:\s*\w+',
+            r'Name:\s*\d+\s*,?\s*',
+        ]
+        cleaned = []
+        for c in chunks:
+            content = c["content"]
+            for pat in noise_patterns:
+                content = re.sub(pat, "", content)
+            content = re.sub(r' {2,}', " ", content)
+            content = re.sub(r'\n{3,}', "\n\n", content)
+            content = content.strip()
+            if not content or len(content) < 10:
+                continue
+            c["content"] = content
+            cleaned.append(c)
+        return cleaned

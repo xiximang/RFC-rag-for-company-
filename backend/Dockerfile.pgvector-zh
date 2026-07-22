@@ -1,17 +1,24 @@
 # 基于 pgvector 镜像，增加中文分词扩展 zhparser
 FROM pgvector/pgvector:pg16
 
-# 换腾讯云镜像源（加速 apt-get）
-RUN sed -i 's|http://deb.debian.org/debian|http://mirrors.cloud.tencent.com/debian|g' /etc/apt/sources.list.d/debian.sources \
-    && sed -i 's|http://security.debian.org/debian-security|http://mirrors.cloud.tencent.com/debian-security|g' /etc/apt/sources.list.d/debian.sources
+# 换中科大镜像源（加速 apt-get）
+RUN sed -i 's|http://deb.debian.org|http://mirrors.ustc.edu.cn|g' /etc/apt/sources.list.d/debian.sources
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git make gcc postgresql-server-dev-16 \
+    ca-certificates curl git make gcc lbzip2 postgresql-server-dev-16 \
+    && curl -sL http://www.xunsearch.com/scws/down/scws-1.2.3.tar.bz2 -o /tmp/scws.tar.bz2 \
+    && tar xf /tmp/scws.tar.bz2 -C /tmp \
+    && cd /tmp/scws-1.2.3 \
+    && ./configure --prefix=/usr \
+    && make -j$(nproc) \
+    && make install \
     && git clone --depth 1 https://github.com/amutu/zhparser.git /tmp/zhparser \
-    && cd /tmp/zhparser && make && make install \
-    && apt-get purge -y git make gcc postgresql-server-dev-16 \
+    && cd /tmp/zhparser \
+    && SCWS_HOME=/usr make -j$(nproc) \
+    && make install \
+    && apt-get purge -y git make gcc postgresql-server-dev-16 ca-certificates curl lbzip2 \
     && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /tmp/zhparser
+    && rm -rf /var/lib/apt/lists/* /tmp/scws-* /tmp/scws.tar.bz2 /tmp/zhparser
 
 # 首次启动时自动创建中文分词配置
 RUN echo "CREATE EXTENSION IF NOT EXISTS zhparser;" \

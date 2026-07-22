@@ -12,6 +12,7 @@ import {
   Spin,
   Tooltip,
   Popconfirm,
+  Drawer,
 } from 'antd'
 import {
   DeleteOutlined,
@@ -22,9 +23,10 @@ import {
   MessageOutlined,
   SettingOutlined,
   BookOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons'
-import api from '@/services/api'
-import DataCard from '@/components/ui/DataCard'
+import api, { submitCandidateFeedback } from '@/services/api'
+import CandidatePanel, { Candidate } from '@/components/retrieval/CandidatePanel'
 import { useTranslation } from '@/i18n'
 import { colors, radius, shadows, spacing, typography } from '@/styles/theme'
 
@@ -58,6 +60,8 @@ interface ChatMessage {
   }
   feedback_rating?: number
   feedback_comment?: string
+  candidates?: Candidate[]
+  candidate_feedback_submitted?: boolean
 }
 
 interface Conversation {
@@ -78,6 +82,8 @@ const SearchConsole = () => {
   const [loading, setLoading] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [configExpanded, setConfigExpanded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatAbortRef = useRef<AbortController | null>(null)
 
@@ -132,13 +138,15 @@ const SearchConsole = () => {
   const loadMessages = async (conversationId: string) => {
     try {
       const res = await api.get(`/v1/chat/conversations/${conversationId}/messages`)
-      const loaded: ChatMessage[] = res.data.map((m: { id: string; role: 'user' | 'assistant'; content: string; sources?: Source[]; feedback_rating?: number; feedback_comment?: string }) => ({
+      const loaded: ChatMessage[] = res.data.map((m: { id: string; role: 'user' | 'assistant'; content: string; sources?: Source[]; feedback_rating?: number; feedback_comment?: string; candidates?: Candidate[]; candidate_feedback?: unknown }) => ({
         id: m.id,
         role: m.role,
         content: m.content,
         sources: m.sources || [],
         feedback_rating: m.feedback_rating,
         feedback_comment: m.feedback_comment,
+        candidates: m.candidates || undefined,
+        candidate_feedback_submitted: !!m.candidate_feedback,
       }))
       setMessages(loaded)
     } catch {
@@ -266,6 +274,7 @@ const SearchConsole = () => {
           role: 'assistant',
           content: data.answer,
           sources: data.sources,
+          candidates: data.candidates,
           intercepted: data.intercepted,
           strategy: data.strategy,
         },
@@ -294,145 +303,38 @@ const SearchConsole = () => {
   }, [query, selectedKbs, currentConversationId, modalities, t])
 
   return (
-    <div className="responsive-page" style={{ display: 'flex', gap: spacing.lg, height: 'calc(100vh - 180px)', minWidth: 0, overflow: 'hidden' }}>
-      {/* Conversation List */}
-      <DataCard
-        title={
-          <Space>
-            <MessageOutlined style={{ color: colors.accent }} />
-            <span>{t('searchConsole.sessionList')}</span>
+    <div className="responsive-page" style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      {/* Full-width Chat Area - no extra box, only the outer page container */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: `2px ${spacing.md}px`,
+          borderBottom: `1px solid ${colors.borderLight}`,
+          minHeight: 32,
+        }}>
+          <Space size="small">
+            <BookOutlined style={{ color: colors.accent, fontSize: 14 }} />
+            <span style={{ fontWeight: typography.weights.medium, color: colors.textPrimary, fontSize: typography.sizes.sm }}>{t('searchConsole.chatTitle')}</span>
           </Space>
-        }
-        style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', minWidth: 0 }}
-        bodyStyle={{ padding: spacing.md, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-      >
-        <Button
-          type="dashed"
-          icon={<PlusOutlined />}
-          block
-          style={{ marginBottom: spacing.md, borderRadius: radius.md }}
-          onClick={() => {
-            setCurrentConversationId(null)
-            setMessages([])
-          }}
-        >
-          {t('searchConsole.newSession')}
-        </Button>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          <List
-            dataSource={conversations}
-            renderItem={(conv) => (
-              <List.Item
-                key={conv.id}
-                style={{
-                  padding: `${spacing.sm}px ${spacing.md}px`,
-                  cursor: 'pointer',
-                  background: currentConversationId === conv.id ? colors.accentLight : 'transparent',
-                  borderRadius: radius.md,
-                  marginBottom: spacing.xs,
-                  transition: 'background 200ms',
-                }}
-                onClick={() => selectConversation(conv)}
-                actions={[
-                  <Popconfirm
-                    key="delete"
-                    title={t('searchConsole.deleteConfirm')}
-                    onConfirm={(e) => deleteConversation(conv.id, e as React.MouseEvent<HTMLElement>)}
-                  >
-                    <Button
-                      type="text"
-                      size="small"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </Popconfirm>,
-                ]}
-              >
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      color: currentConversationId === conv.id ? colors.accent : colors.textPrimary,
-                      fontWeight: currentConversationId === conv.id ? typography.weights.medium : typography.weights.normal,
-                    }}
-                  >
-                    {conv.title}
-                  </div>
-                </div>
-              </List.Item>
-            )}
+          <Button
+            type="text"
+            size="small"
+            icon={<HistoryOutlined style={{ fontSize: 14, color: colors.textSecondary }} />}
+            onClick={() => setHistoryOpen(true)}
           />
         </div>
-      </DataCard>
 
-      {/* Config Panel */}
-      <DataCard
-        title={
-          <Space>
-            <SettingOutlined style={{ color: colors.accent }} />
-            <span>{t('searchConsole.searchConfig')}</span>
-          </Space>
-        }
-        style={{ width: 300, flexShrink: 0, display: 'flex', flexDirection: 'column', minWidth: 0 }}
-        bodyStyle={{ padding: spacing.md }}
-      >
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div>
-            <Text strong style={{ color: colors.textPrimary }}>{t('searchConsole.knowledgeBase')}</Text>
-            <Select
-              mode="multiple"
-              style={{ width: '100%', marginTop: spacing.sm }}
-              placeholder={t('searchConsole.selectKb')}
-              value={selectedKbs}
-              onChange={setSelectedKbs}
-              maxTagCount="responsive"
-              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
-            >
-              {kbList.map((kb) => (
-                <Option key={kb.id} value={kb.id}>
-                  {kb.name}
-                </Option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Text strong style={{ color: colors.textPrimary }}>{t('searchConsole.modality')}</Text>
-            <Checkbox.Group
-              style={{ marginTop: spacing.sm, display: 'block' }}
-              options={modalityOptions}
-              value={modalities}
-              onChange={(vals) => setModalities(vals as string[])}
-            />
-          </div>
-          <div style={{ padding: spacing.md, background: colors.surfaceAlt, borderRadius: radius.md }}>
-            <Text type="secondary" style={{ fontSize: typography.sizes.sm }}>
-              {t('searchConsole.selectedSummary', { kbCount: selectedKbs.length, modalityCount: modalities.length })}
-            </Text>
-          </div>
-        </Space>
-      </DataCard>
-
-      {/* Chat Area */}
-      <DataCard
-        title={
-          <Space>
-            <BookOutlined style={{ color: colors.accent }} />
-            <span>{t('searchConsole.chatTitle')}</span>
-          </Space>
-        }
-        style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}
-        bodyStyle={{ padding: 0, flex: 1, display: 'flex', flexDirection: 'column' }}
-      >
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minWidth: 0, padding: spacing.lg }}>
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minWidth: 0, padding: `2px ${spacing.md}px` }}>
           {messages.length === 0 && (
-            <div style={{ textAlign: 'center', marginTop: 100 }}>
+            <div style={{ textAlign: 'center', marginTop: 80 }}>
               <div
                 style={{
-                  width: 64,
-                  height: 64,
+                  width: 56,
+                  height: 56,
                   borderRadius: radius.full,
                   background: colors.accentLight,
                   color: colors.accent,
@@ -507,6 +409,16 @@ const SearchConsole = () => {
                       </div>
                     </div>
                   )}
+                  {msg.role === 'assistant' && msg.candidates && msg.candidates.length > 0 && (
+                    <CandidatePanel
+                      candidates={msg.candidates}
+                      onSubmitFeedback={async (payload) => {
+                        if (!msg.id) return
+                        await submitCandidateFeedback(msg.id, payload)
+                      }}
+                      submitted={msg.candidate_feedback_submitted}
+                    />
+                  )}
                   {msg.role === 'assistant' && msg.id && (
                     <div style={{ marginTop: spacing.sm, textAlign: 'right' }}>
                       <Tooltip title={t('searchConsole.helpful')}>
@@ -541,7 +453,8 @@ const SearchConsole = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div style={{ padding: spacing.lg, borderTop: `1px solid ${colors.borderLight}` }}>
+        {/* Input + Collapsible Config */}
+        <div style={{ padding: `6px ${spacing.md}px 10px`, borderTop: `1px solid ${colors.borderLight}` }}>
           <Space.Compact style={{ width: '100%' }}>
             <TextArea
               value={query}
@@ -572,8 +485,150 @@ const SearchConsole = () => {
               {t('searchConsole.send')}
             </Button>
           </Space.Compact>
+
+          {/* 检索配置 - collapsible below the input (Claude-style) */}
+          <div style={{ marginTop: spacing.sm }}>
+            <Button
+              type="text"
+              size="small"
+              icon={<SettingOutlined style={{ fontSize: 13 }} />}
+              onClick={() => setConfigExpanded(!configExpanded)}
+              style={{ color: colors.textMuted, fontSize: typography.sizes.sm, padding: `${spacing.xs}px 0` }}
+            >
+              {t('searchConsole.searchConfig')}
+              <span style={{ marginLeft: spacing.xs, fontSize: 10 }}>{configExpanded ? '▲' : '▼'}</span>
+            </Button>
+
+            {configExpanded && (
+              <div
+                style={{
+                  marginTop: spacing.sm,
+                  padding: spacing.md,
+                  background: colors.surfaceAlt,
+                  borderRadius: radius.md,
+                  border: `1px solid ${colors.border}`,
+                }}
+              >
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  <div>
+                    <Text strong style={{ color: colors.textPrimary, fontSize: typography.sizes.sm }}>{t('searchConsole.knowledgeBase')}</Text>
+                    <Select
+                      mode="multiple"
+                      style={{ width: '100%', marginTop: spacing.xs }}
+                      placeholder={t('searchConsole.selectKb')}
+                      value={selectedKbs}
+                      onChange={setSelectedKbs}
+                      maxTagCount="responsive"
+                      maxTagPlaceholder={(omitted) => `+${omitted.length}`}
+                      size="small"
+                    >
+                      {kbList.map((kb) => (
+                        <Option key={kb.id} value={kb.id}>
+                          {kb.name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div>
+                    <Text strong style={{ color: colors.textPrimary, fontSize: typography.sizes.sm }}>{t('searchConsole.modality')}</Text>
+                    <Checkbox.Group
+                      style={{ marginTop: spacing.xs, display: 'block' }}
+                      options={modalityOptions}
+                      value={modalities}
+                      onChange={(vals) => setModalities(vals as string[])}
+                    />
+                  </div>
+                  <div style={{ padding: `${spacing.sm}px ${spacing.md}px`, background: colors.surface, borderRadius: radius.sm }}>
+                    <Text type="secondary" style={{ fontSize: typography.sizes.xs }}>
+                      {t('searchConsole.selectedSummary', { kbCount: selectedKbs.length, modalityCount: modalities.length })}
+                    </Text>
+                  </div>
+                </Space>
+              </div>
+            )}
+          </div>
         </div>
-      </DataCard>
+      </div>
+
+      {/* History Drawer - Claude-style session list */}
+      <Drawer
+        title={
+          <Space>
+            <HistoryOutlined style={{ color: colors.accent }} />
+            <span>{t('searchConsole.sessionList')}</span>
+          </Space>
+        }
+        placement="right"
+        width={320}
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        extra={
+          <Button
+            type="primary"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setCurrentConversationId(null)
+              setMessages([])
+              setHistoryOpen(false)
+            }}
+          >
+            {t('searchConsole.newSession')}
+          </Button>
+        }
+      >
+        <List
+          dataSource={conversations}
+          renderItem={(conv) => (
+            <List.Item
+              key={conv.id}
+              style={{
+                padding: `${spacing.sm}px ${spacing.md}px`,
+                cursor: 'pointer',
+                background: currentConversationId === conv.id ? colors.accentLight : 'transparent',
+                borderRadius: radius.md,
+                marginBottom: spacing.xs,
+                transition: 'background 200ms',
+              }}
+              onClick={() => {
+                selectConversation(conv)
+                setHistoryOpen(false)
+              }}
+              actions={[
+                <Popconfirm
+                  key="delete"
+                  title={t('searchConsole.deleteConfirm')}
+                  onConfirm={(e) => deleteConversation(conv.id, e as React.MouseEvent<HTMLElement>)}
+                >
+                  <Button
+                    type="text"
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </Popconfirm>,
+              ]}
+            >
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div
+                  style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    color: currentConversationId === conv.id ? colors.accent : colors.textPrimary,
+                    fontWeight: currentConversationId === conv.id ? typography.weights.medium : typography.weights.normal,
+                    fontSize: typography.sizes.base,
+                  }}
+                >
+                  {conv.title}
+                </div>
+              </div>
+            </List.Item>
+          )}
+          locale={{ emptyText: t('searchConsole.noSessions') || '暂无会话' }}
+        />
+      </Drawer>
     </div>
   )
 }

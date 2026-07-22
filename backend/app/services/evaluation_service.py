@@ -19,6 +19,7 @@ from app.services.retrieval_service import retrieval_service
 
 logger = logging.getLogger(__name__)
 
+_PROMPT_INJECTION_BLOCKED_RESPONSE = "此问题被安全策略拦截，未生成答案"
 _DEFAULT_METRICS = ["recall@3", "mrr", "ndcg@3", "faithfulness", "relevance", "coherence"]
 
 _METRIC_DESCRIPTIONS = [
@@ -427,6 +428,135 @@ class EvaluationService:
         await self.update_task_status(db, task, "completed", results)
         return results
 
+    # 单问题执行：用于新细粒度调度
+    # ----------------------------------------------------------------
+
+    async def run_single_question(
+        self,
+        db: AsyncSession,
+        task: EvaluationTask,
+        question: str,
+        gt_chunk_ids: List[str],
+        gt_answer: str,
+        metrics: List[str],
+        user_id: UUID | None = None,
+    ) -> Dict[str, Any]:
+        """执行单个问题的检索与生成，返回该问题的指标字典与原文。"""
+        # ---- 1) 解析指标 ----
+        parsed_metrics: List[tuple] = []
+        for m in metrics or []:
+            if "@" in m:
+                name, k_str = m.split("@", 1)
+                try:
+                    parsed_metrics.append((name, int(k_str)))
+                except ValueError:
+                    parsed_metrics.append((m, None))
+            else:
+                parsed_metrics.append((m, None))
+
+        # ---- 2) 检索 ----
+        try:
+            retrieved = await retrieval_service.search(
+                db=db,
+                user_id=user_id,
+                query=question,
+                kb_ids=[task.kb_id],
+                modalities=["text", "table", "link"],
+                top_k=10,
+                rerank_top_k=5,
+            )
+        except Exception as exc:
+            logger.warning("Retrieval failed for question: %s", exc)
+            retrieved = []
+
+        retrieved_ids = [str(r.get("chunk_id") or r.get("id")) for r in retrieved]
+        retrieved_chunks_payload = [
+            {"chunk_id": str(r.get("chunk_id") or r.get("id")), "content": r.get("content", "")}
+            for r in retrieved
+        ]
+
+        metric_scores: Dict[str, float] = {}
+
+        # ---- 3) 检索指标 ----
+        for metric_name, k in parsed_metrics:
+            if metric_name == "recall" and k is not None:
+                score = self.recall_at_k(retrieved_ids, gt_chunk_ids, k)
+                metric_scores[f"recall@{k}"] = score
+            elif metric_name == "mrr":
+                metric_scores["mrr"] = self.mrr(retrieved_ids, gt_chunk_ids)
+            elif metric_name == "ndcg" and k is not None:
+                metric_scores[f"ndcg@{k}"] = self.ndcg_at_k(retrieved_ids, gt_chunk_ids, k)
+
+        # ---- 4) 生成 + 生成指标 ----
+        qa_metrics = [m for m, _ in parsed_metrics if m in ("faithfulness", "relevance", "coherence")]
+        generated_answer = ""
+        intercepted = False
+        if qa_metrics:
+            try:
+                generated_answer, intercepted = await self._generate_answer(
+                    db=db, question=question, retrieved=retrieved_chunks_payload
+                )
+            except Exception as exc:
+                logger.warning("Answer generation failed: %s", exc)
+                generated_answer = ""
+                intercepted = True
+            context_text = "\n\n".join(c["content"] for c in retrieved_chunks_payload)
+            for metric_name in qa_metrics:
+                if metric_name == "faithfulness":
+                    metric_scores["faithfulness"] = await self.faithfulness_score(generated_answer, context_text)
+                elif metric_name == "relevance":
+                    metric_scores["relevance"] = await self.relevance_score(question, generated_answer)
+                elif metric_name == "coherence":
+                    metric_scores["coherence"] = await self.coherence_score(generated_answer)
+
+        # 转换所有 numpy / float 值为原生 float 便于 JSON 序列化
+        out_metrics: Dict[str, float] = {}
+        for k, v in metric_scores.items():
+            try:
+                out_metrics[k] = round(float(v), 4)
+            except Exception:
+                pass
+
+        return {
+            "retrieved_chunk_ids": retrieved_ids,
+            "generated_answer": generated_answer,
+            "metrics": out_metrics,
+        }
+
+    async def _generate_answer(self, db: AsyncSession, question: str, retrieved: list) -> tuple[str, bool]:
+        """生成答案（与 run_evaluation 同样的方式，但只针对单问题）。"""
+        from app.services.llm_client import llm_client
+        from app.services.evaluation_service import _PROMPT_INJECTION_BLOCKED_RESPONSE
+
+        context_text = "\n\n".join(c["content"] for c in retrieved)
+        if not context_text:
+            context_text = "（无相关上下文）"
+
+        # Prompt injection 检测（与现有 L4 逻辑保持一致）
+        try:
+            from app.core.prompt_injection import check_prompt_injection
+            question_safe, was_intercepted, _ = await check_prompt_injection(question)
+            if not question_safe:
+                return _PROMPT_INJECTION_BLOCKED_RESPONSE, True
+        except Exception:
+            pass
+
+        try:
+            response = await llm_client.chat_completion(
+                messages=[
+                    {"role": "system", "content": "你是一名严谨的助手，根据上下文回答用户的问题。如果上下文不足，请回答'没有足够信息'。"},
+                    {"role": "user", "content": f"问题：{question}\n\n上下文：\n{context_text[:3000]}\n\n回答："},
+                ],
+                temperature=0.1,
+                max_tokens=500,
+            )
+            return (
+                response.get("choices", [{}])[0].get("message", {}).get("content", ""),
+                False,
+            )
+        except Exception as exc:
+            logger.warning("LLM generation failed: %s", exc)
+            return "", True
     def available_metrics(self) -> List[Dict[str, Any]]:
         """Return metadata for all supported metrics."""
         return list(_METRIC_DESCRIPTIONS)

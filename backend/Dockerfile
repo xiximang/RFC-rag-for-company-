@@ -1,12 +1,16 @@
 FROM python:3.11-slim
 
+ENV PIP_INDEX_URL=https://mirrors.cloud.tencent.com/pypi/simple/ \
+    PIP_TRUSTED_HOST=mirrors.cloud.tencent.com
+
 WORKDIR /app
 
 # Install system dependencies for API layer and optional parsers.
 # These packages are required when OCR / PDF-to-image / audio parsing is enabled.
 # They are kept in the API image so health-check endpoints and local uploads can
 # validate files without crashing if the optional features are turned off.
-RUN apt-get update \
+RUN sed -i 's|http://deb.debian.org|https://mirrors.ustc.edu.cn|g' /etc/apt/sources.list.d/debian.sources \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         gcc \
@@ -16,11 +20,14 @@ RUN apt-get update \
         poppler-utils \
         ffmpeg \
         libsndfile1 \
+        libreoffice-writer \
+        libreoffice-calc \
+        libreoffice-impress \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies as root
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && pip cache purge
 
 # Copy application code and create a non-root user
 COPY . .

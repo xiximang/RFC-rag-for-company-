@@ -115,3 +115,85 @@ class EvaluationTask(Base):
         nullable=True,
         comment="完成时间",
     )
+
+
+class EvaluationQuestionRun(Base):
+    """单个问题的执行单元——细粒度调度、断点续测、暂停/恢复基于此表。"""
+
+    __tablename__ = "evaluation_question_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        comment="问题执行ID",
+    )
+    task_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("evaluation_tasks.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="所属评测任务",
+    )
+    question_index: Mapped[int] = mapped_column(
+        nullable=False,
+        comment="问题在数据集中的下标（0-based）",
+    )
+    question: Mapped[str] = mapped_column(
+        String(2000),
+        nullable=False,
+        comment="问题文本",
+    )
+    ground_truth: Mapped[dict] = mapped_column(
+        JSONB,
+        default=dict,
+        nullable=False,
+        comment="ground_truth dict（chunk_ids / answer）",
+    )
+    # pending / running / completed / failed / skipped / paused
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending",
+        index=True,
+        comment="状态",
+    )
+    retrieved_chunk_ids: Mapped[list] = mapped_column(
+        JSONB,
+        default=lambda: [],
+        nullable=False,
+        comment="检索到的 chunk id 列表",
+    )
+    generated_answer: Mapped[str | None] = mapped_column(
+        nullable=True,
+        comment="生成的答案",
+    )
+    metrics: Mapped[dict] = mapped_column(
+        JSONB,
+        default=dict,
+        nullable=False,
+        comment="每个指标的得分",
+    )
+    error: Mapped[str | None] = mapped_column(
+        String(2000),
+        nullable=True,
+        comment="失败原因",
+    )
+    attempts: Mapped[int] = mapped_column(
+        nullable=False,
+        default=0,
+        comment="尝试次数",
+    )
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )

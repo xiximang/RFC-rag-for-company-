@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { Layout, Menu, Avatar, Space, Typography, Button, Badge, Drawer } from 'antd'
+import { Layout, Menu, Avatar, Space, Button, Badge, Drawer } from 'antd'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   DatabaseOutlined,
@@ -11,16 +11,16 @@ import {
   SettingOutlined,
   ProfileOutlined,
   KeyOutlined,
-  MenuOutlined,
   GlobalOutlined,
   DashboardOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '@/stores/authStore'
 import { useTranslation, type Language } from '@/i18n'
 import { colors, spacing, radius, shadows, typography, breakpoints } from '@/styles/theme'
 import api from '@/services/api'
 
-const { Header, Sider, Content } = Layout
+const { Sider, Content } = Layout
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -76,40 +76,44 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }
 
   const renderSiderContent = () => (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Logo */}
       <div
         style={{
-          height: 64,
+          height: 48,
           display: 'flex',
           alignItems: 'center',
-          padding: `0 ${spacing.lg}px`,
+          padding: `0 ${spacing.md}px`,
           borderBottom: `1px solid ${colors.borderLight}`,
+          flexShrink: 0,
         }}
       >
         <div
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: radius.md,
+            width: 28,
+            height: 28,
+            borderRadius: radius.sm,
             background: colors.brand,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: colors.accent,
             fontWeight: typography.weights.bold,
-            fontSize: typography.sizes.lg,
-            marginRight: spacing.md,
+            fontSize: typography.sizes.md,
+            marginRight: spacing.sm,
           }}
         >
           R
         </div>
         <div>
-          <div style={{ fontWeight: typography.weights.semibold, fontSize: typography.sizes.base, color: colors.textPrimary }}>
+          <div style={{ fontWeight: typography.weights.semibold, fontSize: typography.sizes.sm, color: colors.textPrimary }}>
             {t('nav.brand')}
           </div>
-          <div style={{ fontSize: typography.sizes.xs, color: colors.textMuted }}>{t('nav.brandSub')}</div>
+          <div style={{ fontSize: 11, color: colors.textMuted, lineHeight: 1.3 }}>{t('nav.brandSub')}</div>
         </div>
       </div>
+
+      {/* Menu */}
       <Menu
         mode="inline"
         selectedKeys={[location.pathname]}
@@ -120,11 +124,84 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         }}
         style={{
           borderRight: 'none',
-          paddingTop: spacing.sm,
+          paddingTop: spacing.xs,
+          flex: 1,
+          overflowY: 'auto',
         }}
         theme="light"
       />
-    </>
+
+      {/* Bottom: User + Controls */}
+      <div
+        style={{
+          borderTop: `1px solid ${colors.borderLight}`,
+          padding: `${spacing.sm}px ${spacing.md}px`,
+          flexShrink: 0,
+        }}
+      >
+        {/* User row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
+          <Space size={6}>
+            <Avatar
+              size={24}
+              style={{
+                backgroundColor: colors.accentLight,
+                color: colors.accent,
+                fontWeight: typography.weights.semibold,
+                fontSize: 12,
+              }}
+            >
+              {(user?.username || 'A')[0].toUpperCase()}
+            </Avatar>
+            <span style={{
+              fontSize: typography.sizes.sm,
+              color: colors.textSecondary,
+              maxWidth: 100,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {user?.username || 'Admin'}
+            </span>
+          </Space>
+          <Button
+            type="text"
+            size="small"
+            icon={<LogoutOutlined style={{ fontSize: 12 }} />}
+            style={{ color: colors.textMuted, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={() => {
+              logout()
+              navigate('/login')
+            }}
+          />
+        </div>
+        {/* Controls row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Button
+            type="text"
+            size="small"
+            icon={<GlobalOutlined style={{ fontSize: 12 }} />}
+            onClick={toggleLanguage}
+            style={{ color: colors.textMuted, fontSize: 11, padding: '0 4px', height: 22 }}
+          >
+            {t(`common.language.${language}`)}
+          </Button>
+          <Badge
+            status={systemStatus}
+            text={
+              <span style={{ fontSize: 11, color: colors.textMuted }}>
+                {systemStatus === 'success'
+                  ? t('nav.running')
+                  : systemStatus === 'warning'
+                    ? t('nav.degraded')
+                    : t('nav.error')}
+              </span>
+            }
+            style={{ fontSize: 11 }}
+          />
+        </div>
+      </div>
+    </div>
   )
 
   useEffect(() => {
@@ -155,7 +232,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, [])
 
   return (
-    <Layout style={{ minHeight: '100vh', overflowX: 'hidden', background: colors.background }}>
+    <Layout style={{ height: '100vh', overflowX: 'hidden', overflow: 'hidden', background: colors.background }}>
       {isMobile ? (
         <Drawer
           placement="left"
@@ -170,7 +247,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       ) : (
         <Sider
           theme="light"
-          width={230}
+          width={190}
           style={{
             background: colors.surface,
             borderRight: `1px solid ${colors.border}`,
@@ -182,85 +259,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           {renderSiderContent()}
         </Sider>
       )}
-      <Layout>
-        <Header
-          style={{
-            background: colors.surface,
-            padding: `0 ${spacing.lg}px`,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderBottom: `1px solid ${colors.borderLight}`,
-            height: 64,
-          }}
-        >
-          <Space align="center" style={{ flex: 1, minWidth: 0 }}>
-            <Button
-              type="text"
-              className="mobile-menu-btn"
-              icon={<MenuOutlined />}
-              onClick={() => setMobileMenuOpen(true)}
-            />
-            <Typography.Title
-              level={4}
-              style={{
-                margin: 0,
-                flex: 1,
-                minWidth: 0,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                color: colors.textPrimary,
-                fontSize: typography.sizes.lg,
-                fontWeight: typography.weights.semibold,
-              }}
-            >
-              {t('nav.headerTitle')}
-            </Typography.Title>
-          </Space>
-          <Space size={spacing.md} align="center">
-            <Button
-              type="text"
-              icon={<GlobalOutlined />}
-              onClick={toggleLanguage}
-              style={{ color: colors.textSecondary }}
-            >
-              {t(`common.language.${language}`)}
-            </Button>
-            <Badge
-              status={systemStatus}
-              text={
-                systemStatus === 'success'
-                  ? t('nav.running')
-                  : systemStatus === 'warning'
-                    ? t('nav.degraded')
-                    : t('nav.error')
-              }
-            />
-            <span className="header-user-info" style={{ color: colors.textSecondary, fontSize: typography.sizes.base }}>
-              {user?.username || 'Admin'}
-            </span>
-            <Avatar
-              style={{
-                backgroundColor: colors.accentLight,
-                color: colors.accent,
-                fontWeight: typography.weights.semibold,
-              }}
-            >
-              {(user?.username || 'A')[0].toUpperCase()}
-            </Avatar>
-            <Button
-              type="link"
-              style={{ color: colors.textMuted, padding: 0 }}
-              onClick={() => {
-                logout()
-                navigate('/login')
-              }}
-            >
-              {t('nav.logout')}
-            </Button>
-          </Space>
-        </Header>
+      <Layout style={{ overflow: 'hidden' }}>
         <Content
           style={{
             margin: spacing.lg,
@@ -270,7 +269,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             minHeight: 280,
             border: `1px solid ${colors.border}`,
             boxShadow: shadows.sm,
-            overflowX: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
           }}
         >
           {children}

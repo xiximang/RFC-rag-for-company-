@@ -292,3 +292,26 @@ class KeywordAnnotator:
     def last_annotation_result(self) -> Optional[AnnotationResult]:
         """Return the result produced by the last ``annotate_chunk`` call."""
         return self._last_result
+
+
+# ---------------------------------------------------------------------------
+# 公共工具：用于 cache_matcher / cache_service 复用的 token 化
+# ---------------------------------------------------------------------------
+STOPWORDS: Set[str] = {
+    "的", "了", "是", "什么", "怎么", "如何", "有", "在", "和", "就",
+    "不", "也", "都", "而", "与", "或",
+}
+
+
+# ---------------------------------------------------------------------------
+# 修正：上面 tokenize 用了 \w+ 不支持中文，改用 unicode 区间（与
+# evaluation_service._tokenize_query 一致）。
+# ---------------------------------------------------------------------------
+def tokenize(text: str) -> Set[str]:
+    """把文本 token 化为小写字符集合（中文+英文+数字），去除停用词。
+
+    中文按 [\u4e00-\u9fff] 单字/词保留。
+    """
+    if not text:
+        return set()
+    return set(re.findall(r"[a-zA-Z0-9\u4e00-\u9fff]+", text.lower())) - STOPWORDS

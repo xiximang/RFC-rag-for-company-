@@ -12,6 +12,10 @@ from app.api.v1.auth import get_current_user
 from app.core.exceptions import PermissionDeniedException
 from app.database import get_db
 from app.models.knowledge_base import KnowledgeBase
+from app.config import settings
+from app.retrieval.embedding_client import embedding_client
+from app.services.cache_service import CacheService
+from app.services.cache_matcher import QueryCacheMatcher
 import json
 
 from app.schemas.chat import (
@@ -90,6 +94,7 @@ async def _retrieve_and_generate(
     max_context_tokens: int,
     history: List[dict] | None,
     stream: bool,
+    user_security_level: str = "L0",
 ):
     """统一的检索与生成逻辑。"""
     # Fast pre-retrieval security check for L4 users / L4 queries.
@@ -102,6 +107,37 @@ async def _retrieve_and_generate(
             "candidates": [],
             "strategy": fast_strategy,
         }
+
+    # Phase 2: query cache hit shortcut (disabled by default, ENBALE_QUERY_CACHE=False)
+    if settings.ENABLE_QUERY_CACHE:
+        try:
+            cache_svc = CacheService()
+            # 尝试计算 query 的 embedding（语义匹配用，5s 超时，限流时静默跳过）
+            _qemb = None
+            try:
+                import asyncio as _asyncio
+                _qemb = await _asyncio.wait_for(
+                    embedding_client.embed(query), timeout=15.0
+                )
+            except Exception:
+                pass
+
+            hit = await QueryCacheMatcher(cache_svc).find_match(
+                db, query, _qemb, user_security_level,
+            )
+            if hit:
+                logger.info("CACHE HIT: type=%s query=%s", hit.match_type, query[:40])
+                await cache_svc.update_hit_time(db, hit.entry["id"])
+                return {
+                    "answer": hit.best_answer,
+                    "intercepted": False,
+                    "sources": [],
+                    "candidates": [],
+                    "strategy": {"strategy": "cache_hit", "match_type": hit.match_type},
+                }
+        except Exception as exc:
+            logger.warning("Cache lookup failed (non-blocking): %s", exc)
+            await db.rollback()
 
     chunks = await retrieval_service.search(
         db=db,
@@ -310,6 +346,7 @@ async def chat(
         max_context_tokens=request.max_context_tokens or 4000,
         history=history,
         stream=False,
+        user_security_level=current_user.security_level or "L0",
     )
 
     logger.info(

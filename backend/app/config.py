@@ -104,6 +104,9 @@ class Settings(BaseSettings):
     EMBEDDING_API_KEY: str | None = None
     EMBEDDING_DIMENSION: int = 1024
 
+    # Phase 2: query cache toggle — off by default, never breaks existing behavior.
+    ENABLE_QUERY_CACHE: bool = False
+
     RERANK_SERVICE_URL: str = "http://localhost:8002/rerank"
     RERANK_API_URL: str | None = None
     RERANK_MODEL: str = "bge-reranker-large"

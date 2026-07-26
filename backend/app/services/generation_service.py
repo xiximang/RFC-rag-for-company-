@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.pipelines.keyword_annotator import KeywordAnnotator, LEVEL_ORDER
 from app.config import settings
 from app.core.metrics import rag_generation_duration_seconds
+from app.core.runtime_config import get_model_config
 from app.services.keyword_service import KeywordService
 from app.services.llm_client import llm_client
 
@@ -47,7 +48,7 @@ class GenerationService:
         import time
 
         start = time.perf_counter()
-        model = getattr(settings, "LLM_MODEL", "unknown")
+        model = get_model_config().get("LLM_MODEL") or getattr(settings, "LLM_MODEL", "unknown")
         status = "ok"
         try:
             return await self._generate_answer(

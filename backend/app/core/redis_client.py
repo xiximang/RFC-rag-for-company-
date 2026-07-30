@@ -111,6 +111,24 @@ class RedisClient:
         return await self._safe(lambda: self._redis.sismember(self._key(key), member))()
 
     # ------------------------------------------------------------------ #
+    # List operations
+    # ------------------------------------------------------------------ #
+    async def lpush(self, key: str, *values: str) -> int | None:
+        return await self._safe(lambda: self._redis.lpush(self._key(key), *values))()
+
+    async def rpush(self, key: str, *values: str) -> int | None:
+        return await self._safe(lambda: self._redis.rpush(self._key(key), *values))()
+
+    async def lrange(self, key: str, start: int, stop: int) -> list[str] | None:
+        return await self._safe(lambda: self._redis.lrange(self._key(key), start, stop))()
+
+    async def ltrim(self, key: str, start: int, stop: int) -> bool | None:
+        return await self._safe(lambda: self._redis.ltrim(self._key(key), start, stop))()
+
+    async def llen(self, key: str) -> int | None:
+        return await self._safe(lambda: self._redis.llen(self._key(key)))()
+
+    # ------------------------------------------------------------------ #
     # Generic / pipeline
     # ------------------------------------------------------------------ #
     async def delete(self, *keys: str) -> int | None:

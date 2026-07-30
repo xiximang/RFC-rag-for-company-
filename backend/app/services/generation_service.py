@@ -42,7 +42,8 @@ class GenerationService:
         context_chunks: List[Dict[str, Any]],
         user_id: UUID,
         stream: bool = False,
-        history: Optional[List[Dict[str, str]]] = None
+        history: Optional[List[Dict[str, str]]] = None,
+        max_context_tokens: int = 4000,
     ) -> Any:
         """生成回答"""
         import time
@@ -52,7 +53,7 @@ class GenerationService:
         status = "ok"
         try:
             return await self._generate_answer(
-                db, query, context_chunks, user_id, stream, history
+                db, query, context_chunks, user_id, stream, history, max_context_tokens,
             )
         except Exception:
             status = "error"
@@ -69,10 +70,23 @@ class GenerationService:
         context_chunks: List[Dict[str, Any]],
         user_id: UUID,
         stream: bool = False,
-        history: Optional[List[Dict[str, str]]] = None
+        history: Optional[List[Dict[str, str]]] = None,
+        max_context_tokens: int = 4000,
     ) -> Any:
         """Internal generation implementation."""
         context_text = self._build_context(context_chunks)
+
+        # ── Prompt 裁剪：超预算时压缩早期对话轮次 ──
+        # 总预算 = max_context_tokens × 3（粗略 chars→tokens 换算）
+        # 优先级（高→低）：query > system > context > 近期完整历史 > 早期摘要
+        if history:
+            budget_chars = max_context_tokens * 3
+            fixed_chars = len(self.SYSTEM_PROMPT) + len(context_text) + len(query)
+            history_budget = budget_chars - fixed_chars
+            if history_budget < 200:
+                history_budget = 200  # 至少留 200 chars 给历史，不返回空
+            history = self._trim_history(history, history_budget)
+
         messages = [
             {"role": "system", "content": self.SYSTEM_PROMPT},
         ]
@@ -81,7 +95,7 @@ class GenerationService:
         messages.append(
             {"role": "user", "content": f"上下文：\n{context_text}\n\n问题：{query}"}
         )
-        
+
         if stream:
             return self._stream_with_intercept(messages, context_chunks, user_id)
         else:
@@ -142,6 +156,47 @@ class GenerationService:
             perm_tag = f'<perm level="{level}"/>'
             parts.append(f"[{i}] {perm_tag} {content}")
         return "\n\n".join(parts)
+
+    @staticmethod
+    def _estimate_chars(text: str) -> int:
+        """粗略估算字符数（中英文混合）。"""
+        return len(text)
+
+    @staticmethod
+    def _trim_history(
+        history: List[Dict[str, str]],
+        budget_chars: int,
+    ) -> List[Dict[str, str]]:
+        """按字符预算裁剪历史。
+
+        超出预算时，从最老的对话轮次开始压缩为单行摘要。
+        预算充足时不做任何改动。
+        """
+        if not history:
+            return history
+
+        current = sum(len(m["content"]) for m in history)
+        if current <= budget_chars:
+            return history
+
+        result = list(history)
+        while result and sum(len(m["content"]) for m in result) > budget_chars:
+            if len(result) < 2:
+                # 只剩一条，直接截断
+                if len(result[0]["content"]) > budget_chars:
+                    result[0]["content"] = result[0]["content"][:budget_chars] + "…"
+                break
+
+            # 从最早的一对 (user, assistant) 开始压缩
+            user_msg = result.pop(0)
+            asst_msg = result.pop(0)
+            summary = (
+                f"[历史] Q: {user_msg['content'][:40]}… "
+                f"A: {asst_msg['content'][:60]}…"
+            )
+            result.insert(0, {"role": "user", "content": summary})
+
+        return result
     
     async def _post_process(
         self,

@@ -44,8 +44,8 @@ sse-starlette>=2.0.0
 
 # OCR and scanned-PDF processing
 # Requires system packages: tesseract-ocr (with chi_sim/eng language data) and poppler-utils
-# pytesseract>=0.3.10
-# pdf2image>=1.17.0
+pytesseract>=0.3.10
+pdf2image>=1.17.0
 
 # Additional image format support
 # pillow-heif>=0.15.0

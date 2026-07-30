@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -17,6 +17,8 @@ from app.retrieval.embedding_client import embedding_client
 from app.services.cache_service import CacheService
 from app.services.cache_matcher import QueryCacheMatcher
 import json
+
+from app.core.redis_client import redis_client
 
 from app.schemas.chat import (
     CandidateItem,
@@ -176,6 +178,7 @@ async def _retrieve_and_generate(
             user_id=user_id,
             stream=stream,
             history=history,
+            max_context_tokens=max_context_tokens,
         )
     except Exception as e:
         # Graceful degradation: 生成服务失败时，回退到基于检索片段的回答
@@ -387,6 +390,35 @@ async def chat(
     )
 
 
+async def _reconnect_generator(stream_id: str, last_event_id: int):
+    """断线重连：回放 Redis 中已缓冲的 token。
+
+    - 回放完成后发送 ``event: done``（data="completed" 或 "interrupted"）。
+    - 若缓冲区已过期 / 不存在，发送 ``event: done`` data="expired"。
+    """
+    buffer_key = f"sse_buf:{stream_id}"
+    done_key = f"sse_done:{stream_id}"
+
+    tokens = await redis_client.lrange(buffer_key, 0, -1)
+    if not tokens:
+        logger.warning("Reconnect buffer expired for stream_id=%s", stream_id)
+        yield {"event": "done", "data": "expired"}
+        return
+
+    # Redis lrange 返回最新→最早；反转得到 0→N 顺序
+    tokens = list(reversed(tokens))
+    logger.info(
+        "Replaying stream_id=%s last_event_id=%d total=%d",
+        stream_id, last_event_id, len(tokens),
+    )
+
+    for i in range(last_event_id + 1, len(tokens)):
+        yield {"id": str(i), "data": tokens[i]}
+
+    done = await redis_client.get(done_key)
+    yield {"event": "done", "data": "completed" if done else "interrupted"}
+
+
 @router.post("/stream")
 async def chat_stream(
     request: ChatRequest,
@@ -424,6 +456,13 @@ async def chat_stream(
             user_id=current_user.id,
         )
 
+    # ── 断线重连早返 ──
+    stream_id = request.stream_id or str(uuid4())
+    if request.last_event_id is not None and request.last_event_id >= 0:
+        logger.info("Reconnect request: stream_id=%s last_event_id=%d", stream_id, request.last_event_id)
+        return EventSourceResponse(_reconnect_generator(stream_id, request.last_event_id))
+
+    # ── 正常流水线 ──
     async def event_generator():
         if security_gateway.detect_prompt_injection(request.query):
             yield {"data": "检测到提示注入攻击，请求已被拦截。"}
@@ -458,11 +497,25 @@ async def chat_stream(
             user_id=current_user.id,
             stream=True,
             history=history,
+            max_context_tokens=request.max_context_tokens or 4000,
         )
+
+        # ── 流式输出 + Redis 缓冲 ──
+        buffer_key = f"sse_buf:{stream_id}"
+        done_key = f"sse_done:{stream_id}"
+
         full_answer = ""
+        event_counter = 0
         async for token in stream_iter:
             full_answer += token
-            yield {"data": token}
+            yield {"id": str(event_counter), "data": token}
+            # 异步缓冲：失败不阻塞，静默降级
+            await redis_client.lpush(buffer_key, token)
+            await redis_client.ltrim(buffer_key, 0, 1999)  # 最多保留 2000 条
+            await redis_client.expire(buffer_key, 300)     # 5 分钟 TTL
+            event_counter += 1
+
+        await redis_client.setex(done_key, 300, "1")
 
         # 构造 sources 用于历史溯源
         sources = [
@@ -482,6 +535,9 @@ async def chat_stream(
         candidates_payload = _build_candidates(chunks)
         yield {"event": "candidates", "data": json.dumps(candidates_payload, ensure_ascii=False)}
 
+        # sources 事件：前端据此展示引用来源
+        yield {"event": "sources", "data": json.dumps(sources, ensure_ascii=False)}
+
         # 流式结束后持久化消息（保留 sources 用于历史溯源）
         if conversation_id:
             await conversation_service.add_message(
@@ -498,6 +554,9 @@ async def chat_stream(
                 content=full_answer,
                 sources=sources,
             )
+
+        # 通知前端流式结束
+        yield {"event": "done", "data": "completed"}
 
     return EventSourceResponse(event_generator())
 

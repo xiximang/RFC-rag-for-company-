@@ -26,7 +26,7 @@ KB_ID = "c93132f7-3664-4b0d-9d35-4fb88a0e7375"
 DB_URL = "postgresql://rag_user:rag_password@localhost:5432/rag_kb"
 RRF_K = 30
 RERANK_API = "https://yunwu.ai/v1/rerank"
-RERANK_KEY = "sk-7z3dhC0HIC8LDJPZWF2w82UnZOLzyDvDsDHHCWrAefPkGaZz"
+RERANK_KEY = "sk-xxx"
 RERANK_MODEL = "qwen3-rerank"
 
 K_VALUES = [1, 3, 5, 10, 20, 30, 50]

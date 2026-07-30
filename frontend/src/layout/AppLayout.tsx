@@ -271,7 +271,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             boxShadow: shadows.sm,
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden',
+            overflowY: 'auto',
+            overflowX: 'hidden',
           }}
         >
           {children}

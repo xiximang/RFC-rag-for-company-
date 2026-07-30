@@ -26,6 +26,7 @@ import {
   HistoryOutlined,
 } from '@ant-design/icons'
 import api, { submitCandidateFeedback } from '@/services/api'
+import { useAuthStore } from '@/stores/authStore'
 import CandidatePanel, { Candidate } from '@/components/retrieval/CandidatePanel'
 import { useTranslation } from '@/i18n'
 import { colors, radius, shadows, spacing, typography } from '@/styles/theme'
@@ -251,48 +252,122 @@ const SearchConsole = () => {
     const controller = new AbortController()
     chatAbortRef.current = controller
 
+    // SSE 断线重连：流 ID + 占位消息 ID
+    const genId = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); })
+    const assistantMsgId = genId()
+
     try {
-      const res = await api.post(
-        '/v1/chat',
-        {
-          query: currentQuery,
-          kb_ids: selectedKbs,
-          conversation_id: conversationId,
-          modalities,
-          top_k: 10,
-          rerank_top_k: 5,
-        },
-        { signal: controller.signal }
-      )
-      const data = res.data
-      setMessages((prev) => [
-        ...prev,
-        { 
-          // id:crypto.randomUUID(),
-          // 把 crypto.randomUUID() 换成了手写的 UUID 生成器，因为 crypto.randomUUID() 在非 HTTPS、非 localhost 的环境下不可用。
-          id: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); }),
-          role: 'assistant',
-          content: data.answer,
-          sources: data.sources,
-          candidates: data.candidates,
-          intercepted: data.intercepted,
-          strategy: data.strategy,
-        },
-      ])
+      // 先放空白占位，后续逐 token 追加
+      setMessages((prev) => [...prev, { id: assistantMsgId, role: 'assistant', content: '', sources: [] }])
+
+      const streamId = genId()
+      let lastEventId = -1
+      let retryCount = 0
+      const MAX_RETRIES = 3
+
+      const doStream = async (): Promise<void> => {
+        console.log('[SSE] 开始流式请求', streamId, assistantMsgId)
+        const token = useAuthStore.getState().token
+        console.log('[SSE] token存在:', !!token)
+        const res = await fetch('/api/v1/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            query: currentQuery,
+            kb_ids: selectedKbs,
+            conversation_id: conversationId,
+            modalities,
+            top_k: 10,
+            rerank_top_k: 5,
+            stream: true,
+            stream_id: streamId,
+            last_event_id: lastEventId,
+          }),
+          signal: controller.signal,
+        })
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            useAuthStore.getState().logout()
+            window.location.href = '/login'
+            return
+          }
+          throw new Error(`HTTP ${res.status}`)
+        }
+
+        console.log('[SSE] 响应状态:', res.status, 'body类型:', res.body?.constructor?.name)
+        console.log('[SSE] content-type:', res.headers.get('content-type'))
+
+        const reader = res.body!.getReader()
+        const decoder = new TextDecoder()
+        let buf = ''
+
+        while (true) {
+          const result = await reader.read()
+          console.log('[SSE] reader.read返回', result.done ? '完成' : '有数据', 'bytes:', result.value?.length)
+          if (result.done) break
+
+          buf += decoder.decode(result.value, { stream: true })
+          // SSE 分隔符是 \r\n\r\n（sse-starlette 按标准实现）
+          const sep = buf.includes('\r\n\r\n') ? '\r\n\r\n' : '\n\n'
+          const blocks = buf.split(sep)
+          buf = blocks.pop() || ''
+
+          for (const block of blocks) {
+            if (!block.trim()) continue
+
+            const lines = block.split('\n')
+            let id = '', eventType = '', data = ''
+
+            for (const line of lines) {
+              const l = line.replace(/\r$/, '')  // 去掉行尾的 \r
+              if (l.startsWith('id: ')) id = l.slice(4)
+              else if (l.startsWith('event: ')) eventType = l.slice(7)
+              else if (l.startsWith('data: ')) data = l.slice(6)
+            }
+
+            if (eventType === 'candidates' && data) {
+              try { const parsed = JSON.parse(data); console.log('[SSE] candidates收到', parsed.length); setMessages((prev) => prev.map((m) => m.id === assistantMsgId ? { ...m, candidates: parsed } : m)) } catch { /* ignore */ }
+            } else if (eventType === 'sources' && data) {
+              try { const parsed = JSON.parse(data); console.log('[SSE] sources收到', parsed.length); setMessages((prev) => prev.map((m) => m.id === assistantMsgId ? { ...m, sources: parsed } : m)) } catch { /* ignore */ }
+            } else if (eventType === 'done') {
+              console.log('[SSE] 流完成')
+              return // 正常结束
+            } else if (data) {
+              if (id) lastEventId = parseInt(id, 10)
+              console.log('[SSE] token', id, data.slice(0, 20))
+              setMessages((prev) => prev.map((m) => m.id === assistantMsgId ? { ...m, content: m.content + data } : m))
+            }
+          }
+        }
+      }
+
+      // 自动重连循环
+      while (retryCount <= MAX_RETRIES) {
+        try {
+          await doStream()
+          break
+        } catch (e) {
+          if ((e as Error).name === 'AbortError' || (e as Error).name === 'CanceledError') {
+            throw e
+          }
+          retryCount++
+          if (retryCount > MAX_RETRIES) throw e
+          await new Promise((r) => setTimeout(r, 1000 * retryCount)) // 指数退避 1s/2s/3s
+        }
+      }
+
       loadConversations()
     } catch (e) {
-      if ((e as Error).name === 'CanceledError' || (e as Error).name === 'AbortError') {
+      if ((e as Error).name === 'AbortError' || (e as Error).name === 'CanceledError') {
         // User left the page/tab; do not show an error toast.
-        setMessages((prev) => prev.filter((m) => m !== userMsg))
+        setMessages((prev) => prev.filter((m) => m !== userMsg && m.id !== assistantMsgId))
       } else {
         message.error(t('searchConsole.requestFailed'))
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: t('searchConsole.requestFailedReply'),
-          },
-        ])
+        setMessages((prev) => prev.map((m) => m.id === assistantMsgId ? { ...m, content: t('searchConsole.requestFailedReply') } : m))
       }
     } finally {
       setLoading(false)

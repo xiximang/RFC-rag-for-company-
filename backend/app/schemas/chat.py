@@ -42,6 +42,9 @@ class ChatRequest(BaseModel):
     rerank_top_k: Optional[int] = 5
     max_context_tokens: Optional[int] = 4000
     stream: Optional[bool] = False
+    # SSE 断线重连
+    stream_id: Optional[str] = None       # 客户端生成的流 ID，重连时复用
+    last_event_id: Optional[int] = -1     # 客户端已收到的最后事件 ID，-1 表示新请求
 
 
 class ChatResponse(BaseModel):

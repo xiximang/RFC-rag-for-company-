@@ -127,6 +127,14 @@ class DocumentIngestPipeline(BaseIngestPipeline):
                                         )
                                     )
                                 texts.append("[/TABLE]")
+
+                        # 嵌入图片 OCR：提取页面上内嵌流程图/截图中的文字
+                        embedded_img_text = self._extract_embedded_images(
+                            file_path, page_idx, page.images
+                        )
+                        if embedded_img_text:
+                            text += "\n" + embedded_img_text
+
                         texts.append(text)
 
             metadata["language"] = self._detect_language("\n".join(texts))
@@ -164,6 +172,52 @@ class DocumentIngestPipeline(BaseIngestPipeline):
                 exc,
             )
             return "[OCR disabled]"
+
+    def _extract_embedded_images(self, file_path: str, page_idx: int, page_images: list) -> str:
+        """提取 PDF 页面上内嵌的图片（截图/流程图），OCR 识别图中文字返回。
+
+        使用 pdf2image 渲染页面，从渲染图中裁剪图片区域后 OCR。
+        只处理大于 50×50 像素的图片，跳过小图标和装饰性元素。
+        返回格式如 "[EMBEDDED_IMAGE 3-1]\n识别出的文字\n[/EMBEDDED_IMAGE]"
+        """
+        import pytesseract
+
+        if not page_images:
+            return ""
+
+        try:
+            from pdf2image import convert_from_path
+
+            page_img = convert_from_path(
+                file_path,
+                first_page=page_idx + 1,
+                last_page=page_idx + 1,
+                dpi=100,
+            )[0]
+
+            result_parts = []
+            for img_idx, img in enumerate(page_images):
+                if img.get("width", 0) < 50 or img.get("height", 0) < 50:
+                    continue
+
+                bbox = (int(img["x0"]), int(img["top"]), int(img["x1"]), int(img["bottom"]))
+                try:
+                    cropped = page_img.crop(bbox)
+
+                    ocr_text = pytesseract.image_to_string(cropped, lang="chi_sim+eng")
+                    if ocr_text and ocr_text.strip():
+                        result_parts.append(
+                            f"[EMBEDDED_IMAGE {page_idx + 1}-{img_idx + 1}]\n"
+                            f"{ocr_text.strip()}\n"
+                            f"[/EMBEDDED_IMAGE]"
+                        )
+                except Exception:
+                    continue
+
+            return "\n".join(result_parts)
+        except Exception as exc:
+            logger.debug("Embedded image extraction failed for page %d: %s", page_idx + 1, exc)
+            return ""
 
     def _extract_pptx(self, file_path: str) -> Tuple[str, Dict[str, Any]]:
         """解析 PPT/PPTX 文件，支持 .ppt（旧格式）和 .pptx（新格式）"""
